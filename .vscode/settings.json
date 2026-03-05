@@ -1,0 +1,12 @@
+{
+  // ── Long-running notebook cell support ──
+  // Allow cells to run for 6+ hours without timeout.
+  "notebook.output.timeout": 21600000,
+
+  // Jupyter-specific: disable kernel interrupt timeout (0 = no limit)
+  "jupyter.jupyterCommandLineArguments": ["--NotebookApp.shutdown_no_activity_timeout=21600"],
+  "jupyter.runStartupCommands": [],
+
+  // Disable automatic cell execution timeout
+  "notebook.cellExecution.timeout": 0
+}

@@ -1,0 +1,35 @@
+# Azure Developer CLI (azd) orchestration
+name: loan-origination
+metadata:
+  template: loan-origination
+
+infra:
+  provider: terraform
+  path: ./infra
+
+services:
+  backend:
+    project: ./py/apps/loan-origination
+    language: py
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      context: ../../../py
+      platform: linux/amd64
+
+  frontend:
+    project: ./ts/apps/loan-ui
+    language: js
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      platform: linux/amd64
+      buildArgs:
+        - VITE_BACKEND_URL=${SERVICE_BACKEND_URI}
+
+hooks:
+  postprovision:
+    shell: sh
+    run: ./infra/scripts/postprovision.sh
+    interactive: true
+    continueOnError: false

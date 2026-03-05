@@ -1,0 +1,32 @@
+[project]
+name = "loan-origination-workspace"
+version = "0.1.0"
+description = "Loan Origination — Python workspace"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "python-dotenv>=1.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "libs/foundrykit",
+    "libs/agentkit",
+    "apps/loan-origination",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.format]
+quote-style = "double"

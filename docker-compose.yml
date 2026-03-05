@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: ./py/apps/loan-origination
+    ports:
+      - "8002:8002"
+    env_file:
+      - path: py/apps/loan-origination/.env
+        required: false
+    environment:
+      - FOUNDRY_PROJECT_ENDPOINT=${FOUNDRY_PROJECT_ENDPOINT:-}
+      - FOUNDRY_CREDENTIAL_MODE=dev
+      - API_HOST=0.0.0.0
+      - API_PORT=8002
+      - CORS_ORIGINS=http://localhost:5174
+      - DOCUMENT_INTELLIGENCE_ENDPOINT=${DOCUMENT_INTELLIGENCE_ENDPOINT:-}
+      - DOCUMENT_INTELLIGENCE_KEY=${DOCUMENT_INTELLIGENCE_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./ts/apps/loan-ui
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_URL=http://localhost:8002
+    ports:
+      - "5174:80"
+    depends_on:
+      backend:
+        condition: service_healthy
