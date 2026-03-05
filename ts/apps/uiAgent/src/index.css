@@ -1,0 +1,41 @@
+:root {
+  --cx-navy: #002B5C;
+  --cx-navy-light: #004080;
+  --cx-teal: #00A3B4;
+  --cx-teal-light: #00C4D6;
+  --cx-cyan-glow: #00D4E8;
+  --cx-gray-50: #F7F9FC;
+  --cx-gray-100: #EEF1F6;
+  --cx-gray-200: #DDE2EA;
+  --cx-gray-400: #9BA4B4;
+  --cx-gray-600: #5A6577;
+  --cx-text: #1A2038;
+  --cx-text-light: #6B7690;
+  --cx-border: #E2E6ED;
+  --cx-ai-purple: #7C3AED;
+  --cx-ai-purple-light: #A78BFA;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--cx-gray-50);
+  color: var(--cx-text);
+  min-height: 100vh;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}

@@ -33,6 +33,14 @@ class LoanOriginationSettings(FoundrySettings):
     mcp_allowed_tools: str = ""
     mcp_approval_mode: str = "never"
 
+    # Copilot MCP servers (5 servers for the conversational lending flow)
+    mcp_identity_url: str = "http://localhost:8010/mcp"
+    mcp_product_url: str = "http://localhost:8011/mcp"
+    mcp_credit_url: str = "http://localhost:8012/mcp"
+    mcp_offers_url: str = "http://localhost:8013/mcp"
+    mcp_contract_url: str = "http://localhost:8014/mcp"
+    mcp_copilot_enabled: bool = True
+
     # Runtime modes
     storage_mode: Literal["inmemory", "cosmos"] = "inmemory"
     otel_exporter: Literal["console", "aitoolkit", "azure"] = "console"

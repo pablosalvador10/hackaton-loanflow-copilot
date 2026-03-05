@@ -1,23 +1,22 @@
 /**
- * App root — single-page Loan Origination chatbot with layout wrapper.
- * Only one route: / (ChatPage).
+ * App root — LOH AI Lending Copilot.
+ * Two screens: Welcome → Chat (copilot conversation flow).
  */
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ConversationProvider } from "@/hooks/use-conversation";
-import { AppLayout } from "@/components/layout/app-layout";
-import { ChatPage } from "@/components/chat/chat-page";
+import { CopilotProvider, useCopilot } from "@/hooks/use-copilot";
+import { WelcomeScreen } from "@/components/copilot/welcome-screen";
+import { ChatScreen } from "@/components/copilot/chat-screen";
+
+function AppInner() {
+  const { messages } = useCopilot();
+  // Show chat screen once the copilot has started (messages exist)
+  return messages.length > 0 ? <ChatScreen /> : <WelcomeScreen />;
+}
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ConversationProvider>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<ChatPage />} />
-          </Route>
-        </Routes>
-      </ConversationProvider>
-    </BrowserRouter>
+    <CopilotProvider>
+      <AppInner />
+    </CopilotProvider>
   );
 }
