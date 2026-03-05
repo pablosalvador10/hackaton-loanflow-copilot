@@ -10,25 +10,28 @@ import { Bot } from "lucide-react";
 import { ChatMessage } from "./chat-message";
 import { ChatEmptyState } from "./chat-empty-state";
 import { TypingIndicator } from "./typing-indicator";
-import type { ChatMessage as ChatMessageType } from "@/types";
+import { ToolCallIndicator } from "./tool-call-indicator";
+import type { ChatMessage as ChatMessageType, ToolCallState } from "@/types";
 
 interface ChatMessageListProps {
   messages: ChatMessageType[];
   isLoading: boolean;
+  toolCall: ToolCallState;
   onPromptClick: (prompt: string) => void;
 }
 
 export function ChatMessageList({
   messages,
   isLoading,
+  toolCall,
   onPromptClick,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  /* Auto-scroll to bottom on new messages or loading change */
+  /* Auto-scroll to bottom on new messages, loading change, or tool activity */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, isLoading]);
+  }, [messages.length, isLoading, toolCall.active]);
 
   /* Hide typing indicator once the bot message has streamed content */
   const lastMsg = messages[messages.length - 1];
@@ -92,6 +95,11 @@ export function ChatMessageList({
               <TypingIndicator />
             </div>
           </div>
+        )}
+
+        {/* Tool-call indicator — shown while agent executes MCP tools */}
+        {toolCall.active && !showTyping && (
+          <ToolCallIndicator toolNames={toolCall.toolNames} />
         )}
 
         {/* Scroll anchor */}

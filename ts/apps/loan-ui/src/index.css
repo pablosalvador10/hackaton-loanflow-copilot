@@ -109,6 +109,25 @@
 
 /* ── Copilot typing bounce animation ── */
 @keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-8px); opacity: 1; }
+  0%, 55%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  28% { transform: translateY(-7px) scale(1.2); opacity: 1; }
+}
+
+/* ── Shimmer skeleton ── */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* ── Send-button pulse when active ── */
+@keyframes sendPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(0,43,92,0.25); }
+  50%       { box-shadow: 0 4px 20px rgba(0,43,92,0.45); }
+}
+
+/* ── Tool-call progress bar sliding animation ── */
+@keyframes tool-bar-slide {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
 }

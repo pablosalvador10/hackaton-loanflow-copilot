@@ -506,11 +506,24 @@ class _StreamCollector(AgentEventHandler):
         :param step: The run step (tool_calls or message_creation).
         """
         if step.type == "tool_calls" and step.status == "in_progress":
+            # Extract individual tool names if the step details expose them
+            tool_names: list[str] = []
+            try:
+                details = getattr(step, "step_details", None)
+                if details is not None:
+                    calls = getattr(details, "tool_calls", None) or []
+                    for tc in calls:
+                        fn = getattr(tc, "function", None)
+                        name = getattr(fn, "name", None) if fn else None
+                        if name:
+                            tool_names.append(name)
+            except Exception:
+                pass
             self.events.append(
                 AgentStreamEvent(
                     event_type="tool_start",
                     data="Executing tools...",
-                    metadata={"step_id": step.id},
+                    metadata={"step_id": step.id, "tool_names": tool_names},
                 )
             )
         elif step.type == "tool_calls" and step.status == "completed":

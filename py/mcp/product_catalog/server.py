@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("product-catalog", instructions="Sharia-compliant loan product catalog for Saudi lending.", host="0.0.0.0", port=8011)
+mcp = FastMCP("product-catalog", instructions="Sharia-compliant loan product catalog for Saudi lending.", host="0.0.0.0", port=8011, stateless_http=True)
 
 PRODUCTS = [
     {

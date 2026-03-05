@@ -6,7 +6,7 @@ import json
 import math
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("offers-pricing", instructions="Offer generation and pricing tools for Saudi lending.", host="0.0.0.0", port=8013)
+mcp = FastMCP("offers-pricing", instructions="Offer generation and pricing tools for Saudi lending.", host="0.0.0.0", port=8013, stateless_http=True)
 
 
 def _calc_monthly(principal: int, annual_rate: float, tenure_months: int) -> float:

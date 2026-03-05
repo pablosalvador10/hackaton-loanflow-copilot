@@ -41,7 +41,7 @@ export function CopilotMessage({ message }: Props) {
   };
 
   return (
-    <div className={`flex gap-3 animate-fade-in-up ${isUser ? "justify-end" : "justify-start"}`}
+    <div className={`flex gap-3 animate-slide-in-up ${isUser ? "justify-end" : "justify-start"}`}
       style={{ animationFillMode: "forwards" }}>
       {/* AI avatar */}
       {!isUser && (
@@ -55,10 +55,10 @@ export function CopilotMessage({ message }: Props) {
 
       <div className={isUser ? "max-w-[80%]" : "max-w-[85%] flex-1"}>
         {/* Bubble */}
-        <div className={`rounded-[18px] px-[18px] py-3.5 text-sm leading-relaxed ${
+        <div className={`rounded-[18px] px-[18px] py-3.5 text-sm leading-relaxed transition-shadow ${
           isUser
             ? "rounded-br-[6px] text-white ml-auto"
-            : "bg-white border border-[#E2E6ED] rounded-bl-[6px] text-[#1A2038] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+            : "bg-white border border-[#E8EBF0] rounded-bl-[6px] text-[#1A2038] shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
         }`}
           style={isUser ? { background: "linear-gradient(135deg, #002B5C 0%, #004080 100%)" } : undefined}
           dangerouslySetInnerHTML={{ __html: message.text }}
@@ -73,11 +73,11 @@ export function CopilotMessage({ message }: Props) {
             {message.quickReplies.map((r, i) => (
               <button key={i} onClick={() => onReply(r, i)}
                 disabled={repliedIdx !== null}
-                className={`px-[18px] py-2.5 rounded-full text-[13px] font-semibold transition-all border-[1.5px] ${
+                className={`px-[16px] py-2 rounded-full text-[13px] font-semibold transition-all duration-150 border-[1.5px] ${
                   repliedIdx === i
                     ? "bg-[#002B5C] text-white border-[#002B5C]"
                     : repliedIdx !== null
-                      ? "bg-[#F7F9FC] border-[#E2E6ED] text-[#002B5C] opacity-50 cursor-default"
+                      ? "bg-[#F7F9FC] border-[#E2E6ED] text-[#002B5C] opacity-40 cursor-default"
                       : "bg-[#F7F9FC] border-[#E2E6ED] text-[#002B5C] hover:bg-[#002B5C] hover:text-white hover:border-[#002B5C] hover:-translate-y-px cursor-pointer"
                 }`}>
                 {r}

@@ -111,16 +111,11 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
    * ══════════════════════════════════════════════════════════════ */
 
   const sendToAzure = useCallback(async (userText: string) => {
+    // Show only the typing indicator until the first token arrives — no empty bubble.
     setIsTyping(true);
 
     const botMsgId = crypto.randomUUID();
-    const botMsg: CopilotMessage = {
-      id: botMsgId,
-      role: "assistant",
-      text: "",
-      timestamp: Date.now(),
-    };
-    setMessages(prev => [...prev, botMsg]);
+    let msgAdded = false;
 
     await streamConversationMessage(
       {
@@ -133,16 +128,26 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       },
       {
         onDelta: (text: string) => {
-          setMessages(prev =>
-            prev.map(m => m.id === botMsgId ? { ...m, text: m.text + text } : m)
-          );
+          if (!msgAdded) {
+            // First token: swap typing indicator for the real message bubble.
+            msgAdded = true;
+            setIsTyping(false);
+            setMessages(prev => [
+              ...prev,
+              { id: botMsgId, role: "assistant", text, timestamp: Date.now() } as CopilotMessage,
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m => m.id === botMsgId ? { ...m, text: m.text + text } : m)
+            );
+          }
         },
         onToolStart: () => {
-          // Could show a tool indicator
+          // Typing indicator already covers the "tool running" visual — no change needed.
         },
         onDone: () => {
           setIsTyping(false);
-          // Save to history
+          // Save completed message to conversation history.
           setMessages(prev => {
             const final = prev.find(m => m.id === botMsgId);
             if (final) {
@@ -151,15 +156,28 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
             return prev;
           });
         },
-        onError: (message: string) => {
+        onError: (errMsg: string) => {
           setIsTyping(false);
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === botMsgId
-                ? { ...m, text: m.text || `Sorry, something went wrong: ${message}` }
-                : m
-            )
-          );
+          if (!msgAdded) {
+            // Stream errored before any token — add an error bubble.
+            setMessages(prev => [
+              ...prev,
+              {
+                id: botMsgId,
+                role: "assistant",
+                text: `Sorry, something went wrong: ${errMsg}`,
+                timestamp: Date.now(),
+              } as CopilotMessage,
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === botMsgId
+                  ? { ...m, text: m.text || `Sorry, something went wrong: ${errMsg}` }
+                  : m
+              )
+            );
+          }
         },
       }
     );

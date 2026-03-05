@@ -33,7 +33,8 @@ from foundrykit import AgentManager, AgentStreamEvent, ToolRegistry, get_foundry
 from pydantic import BaseModel, Field
 
 from models.application import AuditEvent, Conversation, DocumentRecord, LoanApplication
-from services.mcp_setup import get_mcp_handler, get_mcp_tool, get_copilot_mcp_tools
+from services.mcp_functions import register_mcp_functions
+from services.mcp_setup import get_mcp_handler, get_mcp_tool
 from services.storage import get_storage
 from tools.assemble_application import assemble_application
 from tools.audit import log_audit_event
@@ -116,18 +117,21 @@ _registry.register(generate_approval_letter)
 _registry.register(log_audit_event)
 
 # Add MCP tool if configured (optional — enables remote tool servers)
+# Note: only the legacy server (azure_specs) uses McpTool since it has a public URL.
+# The 5 local copilot MCP servers are registered as Python FunctionTools below so
+# the SDK calls them locally instead of routing through Foundry's cloud MCP connector.
 _mcp = get_mcp_tool()
 if _mcp is not None:
     _registry.add_mcp_tool(_mcp)
     logger.info("mcp_tool_registered", label=_mcp.server_label)
 
-# Add copilot MCP tools (5 servers for the conversational lending flow)
-_copilot_mcps = get_copilot_mcp_tools()
-for _cmcp in _copilot_mcps:
-    _registry.add_mcp_tool(_cmcp)
-    logger.info("copilot_mcp_registered", label=_cmcp.server_label)
+# Register all 16 local MCP tools as native function tools (local execution).
+_mcp_fn_count = register_mcp_functions(_registry)
+logger.info("mcp_functions_registered", count=_mcp_fn_count)
 
-_all_mcp_tools = [t for t in [_mcp, *_copilot_mcps] if t is not None]
+# Only pass the azure_specs McpTool object to run_agent_stream (for approval handling).
+# Local MCP functions run automatically via the standard FunctionTool mechanism.
+_all_mcp_tools = [_mcp] if _mcp is not None else []
 
 _toolset = _registry.build_toolset()
 
@@ -258,6 +262,14 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
             if event.event_type == "text_delta":
                 chunks.append(event.data)
                 yield _sse_event("delta", {"text": event.data})
+            elif event.event_type == "tool_start":
+                tool_names = (event.metadata or {}).get("tool_names", [])
+                yield _sse_event("tool_start", {
+                    "label": event.data,
+                    "tool_names": tool_names,
+                })
+            elif event.event_type == "tool_complete":
+                yield _sse_event("tool_done", {})
             elif event.event_type == "error":
                 yield _sse_event("error", {"message": event.data})
 

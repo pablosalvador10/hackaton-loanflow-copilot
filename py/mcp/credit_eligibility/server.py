@@ -6,7 +6,7 @@ import asyncio
 import json
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("credit-eligibility", instructions="Credit assessment and eligibility checking for Saudi lending.", host="0.0.0.0", port=8012)
+mcp = FastMCP("credit-eligibility", instructions="Credit assessment and eligibility checking for Saudi lending.", host="0.0.0.0", port=8012, stateless_http=True)
 
 # Credit scores by profile
 CREDIT_SCORES = {
