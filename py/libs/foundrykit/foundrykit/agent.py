@@ -307,16 +307,22 @@ class AgentManager:
                 mcp_tools=mcp_tools,
             )
 
+            event_cursor = 0
             with self._agents.runs.stream(
                 thread_id=thread_id,
                 agent_id=agent_id,
                 event_handler=collector,
             ) as stream:
                 for _event_type, _event_data, _func_return in stream:
-                    pass  # events are captured by the collector callbacks
+                    # Drain any events the callback appended during this iteration
+                    while event_cursor < len(collector.events):
+                        yield collector.events[event_cursor]
+                        event_cursor += 1
 
-            # Yield all collected events
-            yield from collector.events
+            # Yield any trailing events (run_completed, errors from on_done)
+            while event_cursor < len(collector.events):
+                yield collector.events[event_cursor]
+                event_cursor += 1
 
             logger.info(
                 "agent_stream_complete",

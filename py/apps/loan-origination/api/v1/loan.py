@@ -17,8 +17,10 @@ Uses a Foundry Prompt Agent with five FunctionTools:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
+import threading
 import uuid
 from collections.abc import AsyncGenerator
 from pathlib import Path
@@ -27,7 +29,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
-from foundrykit import AgentManager, ToolRegistry, get_foundry_client
+from foundrykit import AgentManager, AgentStreamEvent, ToolRegistry, get_foundry_client
 from pydantic import BaseModel, Field
 
 from models.application import AuditEvent, Conversation, DocumentRecord, LoanApplication
@@ -198,24 +200,49 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                 f"Document context: {body.document_context}"
             )
 
-        with manager.temporary_agent(
-            name="LoanOrigination",
-            instructions=_SYSTEM_PROMPT,
-            toolset=_toolset,
-        ) as agent:
-            # Pass MCP tools for streaming approval if MCP is enabled
-            stream_kwargs: dict[str, Any] = {}
-            if _mcp is not None:
-                stream_kwargs["mcp_tools"] = [_mcp]
+        # Run the synchronous Foundry SDK stream in a background thread so the
+        # async event loop is never blocked.  Events are forwarded via a queue.
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[AgentStreamEvent | None] = asyncio.Queue()
 
-            for event in manager.run_agent_stream(
-                agent.id, user_message, **stream_kwargs
-            ):
-                if event.event_type == "text_delta":
-                    chunks.append(event.data)
-                    yield _sse_event("delta", {"text": event.data})
-                elif event.event_type == "error":
-                    yield _sse_event("error", {"message": event.data})
+        def _produce() -> None:
+            """Run the agent stream in a worker thread, forwarding events to the queue."""
+            try:
+                with manager.temporary_agent(
+                    name="LoanOrigination",
+                    instructions=_SYSTEM_PROMPT,
+                    toolset=_toolset,
+                ) as agent:
+                    stream_kwargs: dict[str, Any] = {}
+                    if _mcp is not None:
+                        stream_kwargs["mcp_tools"] = [_mcp]
+
+                    for event in manager.run_agent_stream(
+                        agent.id, user_message, **stream_kwargs
+                    ):
+                        loop.call_soon_threadsafe(queue.put_nowait, event)
+            except Exception as exc:
+                loop.call_soon_threadsafe(
+                    queue.put_nowait,
+                    AgentStreamEvent(event_type="error", data=str(exc)),
+                )
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+
+        thread = threading.Thread(target=_produce, daemon=True)
+        thread.start()
+
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            if event.event_type == "text_delta":
+                chunks.append(event.data)
+                yield _sse_event("delta", {"text": event.data})
+            elif event.event_type == "error":
+                yield _sse_event("error", {"message": event.data})
+
+        thread.join(timeout=30)
 
         # Persist conversation
         full_response = "".join(chunks)
