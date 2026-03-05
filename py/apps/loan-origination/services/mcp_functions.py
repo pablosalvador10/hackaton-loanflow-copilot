@@ -20,6 +20,7 @@ Usage in the loan router::
 from __future__ import annotations
 
 import json
+import threading
 from typing import Optional
 
 import httpx
@@ -30,6 +31,35 @@ from core.config import settings
 
 logger = structlog.get_logger(__name__)
 tracer = trace.get_tracer(__name__)
+
+
+# ── Thread-local tool results store ─────────────────────────────
+# Each agent run clears the store before starting, then key tool
+# functions write their parsed results here.  After the run, loan.py
+# reads the store to determine which rich card to emit to the frontend.
+
+_tl = threading.local()
+
+
+def clear_tool_results() -> None:
+    """Reset the thread-local store before a new agent run."""
+    _tl.results = {}
+
+
+def _store_result(tool_name: str, raw: str) -> None:
+    """Parse and cache a tool result in thread-local storage."""
+    store: dict | None = getattr(_tl, "results", None)
+    if store is None:
+        return
+    try:
+        store[tool_name] = json.loads(raw)
+    except Exception:
+        store[tool_name] = raw
+
+
+def get_tool_results() -> dict:
+    """Return a snapshot of tool results collected during the current run."""
+    return dict(getattr(_tl, "results", {}))
 
 
 # ── MCP HTTP helper ──────────────────────────────────────────────
@@ -94,7 +124,9 @@ def verify_nafath(national_id: str) -> str:
     with tracer.start_as_current_span("mcp.verify_nafath") as span:
         span.set_attribute("tool.name", "verify_nafath")
         span.set_attribute("tool.national_id", national_id)
-        return _call_mcp(settings.mcp_identity_url, "verify_nafath", {"national_id": national_id})
+        result = _call_mcp(settings.mcp_identity_url, "verify_nafath", {"national_id": national_id})
+        _store_result("verify_nafath", result)
+        return result
 
 
 def verify_national_id(national_id: str, full_name: str, date_of_birth: str) -> str:
@@ -107,11 +139,13 @@ def verify_national_id(national_id: str, full_name: str, date_of_birth: str) -> 
     """
     with tracer.start_as_current_span("mcp.verify_national_id") as span:
         span.set_attribute("tool.name", "verify_national_id")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_identity_url,
             "verify_national_id",
             {"national_id": national_id, "full_name": full_name, "date_of_birth": date_of_birth},
         )
+        _store_result("verify_national_id", result)
+        return result
 
 
 def get_customer_profile(customer_id: str) -> str:
@@ -123,9 +157,11 @@ def get_customer_profile(customer_id: str) -> str:
     with tracer.start_as_current_span("mcp.get_customer_profile") as span:
         span.set_attribute("tool.name", "get_customer_profile")
         span.set_attribute("tool.customer_id", customer_id)
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_identity_url, "get_customer_profile", {"customer_id": customer_id}
         )
+        _store_result("get_customer_profile", result)
+        return result
 
 
 # ── Product catalog tools (port 8011) ───────────────────────────
@@ -142,7 +178,9 @@ def list_loan_products(intent: Optional[str] = None) -> str:
         args: dict = {}
         if intent:
             args["intent"] = intent
-        return _call_mcp(settings.mcp_product_url, "list_loan_products", args)
+        result = _call_mcp(settings.mcp_product_url, "list_loan_products", args)
+        _store_result("list_loan_products", result)
+        return result
 
 
 def get_product_details(product_id: str) -> str:
@@ -166,9 +204,11 @@ def get_product_by_intent(user_message: str) -> str:
     """
     with tracer.start_as_current_span("mcp.get_product_by_intent") as span:
         span.set_attribute("tool.name", "get_product_by_intent")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_product_url, "get_product_by_intent", {"user_message": user_message}
         )
+        _store_result("get_product_by_intent", result)
+        return result
 
 
 # ── Credit eligibility tools (port 8012) ────────────────────────
@@ -183,9 +223,11 @@ def run_credit_check(customer_id: str) -> str:
     with tracer.start_as_current_span("mcp.run_credit_check") as span:
         span.set_attribute("tool.name", "run_credit_check")
         span.set_attribute("tool.customer_id", customer_id)
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_credit_url, "run_credit_check", {"customer_id": customer_id}
         )
+        _store_result("run_credit_check", result)
+        return result
 
 
 def get_credit_score(customer_id: str) -> str:
@@ -196,9 +238,11 @@ def get_credit_score(customer_id: str) -> str:
     """
     with tracer.start_as_current_span("mcp.get_credit_score") as span:
         span.set_attribute("tool.name", "get_credit_score")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_credit_url, "get_credit_score", {"customer_id": customer_id}
         )
+        _store_result("get_credit_score", result)
+        return result
 
 
 def check_eligibility(customer_id: str, product_type: str, requested_amount: int) -> str:
@@ -211,7 +255,7 @@ def check_eligibility(customer_id: str, product_type: str, requested_amount: int
     """
     with tracer.start_as_current_span("mcp.check_eligibility") as span:
         span.set_attribute("tool.name", "check_eligibility")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_credit_url,
             "check_eligibility",
             {
@@ -220,6 +264,8 @@ def check_eligibility(customer_id: str, product_type: str, requested_amount: int
                 "requested_amount": requested_amount,
             },
         )
+        _store_result("check_eligibility", result)
+        return result
 
 
 # ── Offers & pricing tools (port 8013) ──────────────────────────
@@ -245,7 +291,7 @@ def generate_offer(
     """
     with tracer.start_as_current_span("mcp.generate_offer") as span:
         span.set_attribute("tool.name", "generate_offer")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_offers_url,
             "generate_offer",
             {
@@ -257,6 +303,8 @@ def generate_offer(
                 "tenure_months": tenure_months,
             },
         )
+        _store_result("generate_offer", result)
+        return result
 
 
 def calculate_monthly_payment(amount: int, rate: float, tenure_months: int) -> str:
@@ -269,11 +317,13 @@ def calculate_monthly_payment(amount: int, rate: float, tenure_months: int) -> s
     """
     with tracer.start_as_current_span("mcp.calculate_monthly_payment") as span:
         span.set_attribute("tool.name", "calculate_monthly_payment")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_offers_url,
             "calculate_monthly_payment",
             {"amount": amount, "rate": rate, "tenure_months": tenure_months},
         )
+        _store_result("calculate_monthly_payment", result)
+        return result
 
 
 def adjust_offer(
@@ -338,7 +388,7 @@ def create_contract(
     """
     with tracer.start_as_current_span("mcp.create_contract") as span:
         span.set_attribute("tool.name", "create_contract")
-        return _call_mcp(
+        result = _call_mcp(
             settings.mcp_contract_url,
             "create_contract",
             {
@@ -351,6 +401,8 @@ def create_contract(
                 "rate": rate,
             },
         )
+        _store_result("create_contract", result)
+        return result
 
 
 def verify_otp(contract_id: str, otp_code: str) -> str:

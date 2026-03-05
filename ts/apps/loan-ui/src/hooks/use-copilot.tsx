@@ -116,6 +116,8 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
 
     const botMsgId = crypto.randomUUID();
     let msgAdded = false;
+    // Card to attach when onDone fires (populated by onCard callback).
+    let pendingCard: { type: CopilotMessage["card"]; data?: Record<string, unknown> } | null = null;
 
     await streamConversationMessage(
       {
@@ -145,13 +147,22 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
         onToolStart: () => {
           // Typing indicator already covers the "tool running" visual — no change needed.
         },
+        onCard: (cardType, data) => {
+          pendingCard = { type: cardType as CopilotMessage["card"], data };
+        },
         onDone: () => {
           setIsTyping(false);
-          // Save completed message to conversation history.
+          // Save completed message to history and attach card if one was signalled.
           setMessages(prev => {
             const final = prev.find(m => m.id === botMsgId);
             if (final) {
               historyRef.current.push({ role: "assistant", content: final.text });
+            }
+            if (pendingCard) {
+              const { type, data } = pendingCard;
+              return prev.map(m =>
+                m.id === botMsgId ? { ...m, card: type, data } : m
+              );
             }
             return prev;
           });

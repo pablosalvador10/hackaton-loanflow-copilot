@@ -33,6 +33,7 @@ from foundrykit import AgentManager, AgentStreamEvent, ToolRegistry, get_foundry
 from pydantic import BaseModel, Field
 
 from models.application import AuditEvent, Conversation, DocumentRecord, LoanApplication
+from services import mcp_functions as _mcp_fn_mod
 from services.mcp_functions import register_mcp_functions
 from services.mcp_setup import get_mcp_handler, get_mcp_tool
 from services.storage import get_storage
@@ -136,6 +137,55 @@ _all_mcp_tools = [_mcp] if _mcp is not None else []
 _toolset = _registry.build_toolset()
 
 
+# ── Card determination ──────────────────────────────────────────
+
+# Tools in priority order — later tool in the list wins if multiple were called.
+_CARD_PRIORITY: list[tuple[str, str]] = [
+    ("verify_nafath",           "nafath-verify"),
+    ("verify_national_id",      "identity-card"),
+    ("get_customer_profile",    "identity-card"),
+    ("list_loan_products",      "product-list"),
+    ("get_product_by_intent",   "product-list"),
+    ("run_credit_check",        "credit-check"),
+    ("check_eligibility",       "credit-check"),
+    ("get_credit_score",        "credit-score"),
+    ("generate_offer",          "offer-card"),
+    ("calculate_monthly_payment", "offer-card"),
+    ("create_contract",         "contract-summary"),
+]
+
+
+def _determine_card(results: dict) -> dict | None:
+    """Select the richest card to show based on which tools were called.
+
+    Iterates priority list — the last matching entry wins so higher-value
+    actions (offers, contracts) always take precedence.
+
+    :param results: Dict of tool_name → parsed JSON result.
+    :return: ``{type, data}`` dict ready for the ``card`` SSE event, or None.
+    """
+    chosen_type: str | None = None
+    chosen_data: dict = {}
+
+    for tool_name, card_type in _CARD_PRIORITY:
+        if tool_name not in results:
+            continue
+        raw = results[tool_name]
+        # product-list expects { products: [...] }
+        if card_type == "product-list":
+            data = {"products": raw} if isinstance(raw, list) else (raw if isinstance(raw, dict) else {})
+        elif isinstance(raw, dict):
+            data = raw
+        else:
+            data = {}
+        chosen_type = card_type
+        chosen_data = data
+
+    if chosen_type is None:
+        return None
+    return {"type": chosen_type, "data": chosen_data}
+
+
 # ── SSE helpers ─────────────────────────────────────────────────
 
 
@@ -230,6 +280,7 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
 
         def _produce() -> None:
             """Run the agent stream in a worker thread, forwarding events to the queue."""
+            _mcp_fn_mod.clear_tool_results()
             try:
                 with manager.temporary_agent(
                     name="LoanOrigination",
@@ -244,6 +295,18 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                         agent.id, user_message, **stream_kwargs
                     ):
                         loop.call_soon_threadsafe(queue.put_nowait, event)
+
+                # After the agent finishes, capture tool results and forward
+                tool_results = _mcp_fn_mod.get_tool_results()
+                if tool_results:
+                    loop.call_soon_threadsafe(
+                        queue.put_nowait,
+                        AgentStreamEvent(
+                            event_type="tool_results",
+                            data="",
+                            metadata={"results": tool_results},
+                        ),
+                    )
             except Exception as exc:
                 loop.call_soon_threadsafe(
                     queue.put_nowait,
@@ -270,6 +333,10 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                 })
             elif event.event_type == "tool_complete":
                 yield _sse_event("tool_done", {})
+            elif event.event_type == "tool_results":
+                card = _determine_card(event.metadata.get("results", {}))
+                if card:
+                    yield _sse_event("card", card)
             elif event.event_type == "error":
                 yield _sse_event("error", {"message": event.data})
 
