@@ -191,7 +191,7 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
         manager = AgentManager(client)
         chunks: list[str] = []
 
-        # Build user message — include document context if present
+        # Build user message — include conversation history and optional document context
         user_message = body.message
         if body.document_context:
             user_message = (
@@ -199,6 +199,17 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                 f"[Document data attached — process this document]\n"
                 f"Document context: {body.document_context}"
             )
+
+        # Prepend conversation history so the agent has full context each turn.
+        # The Azure Agents API only accepts user-role messages when adding to a
+        # thread manually, so we inject the prior turns as a transcript prefix.
+        if body.history:
+            lines = ["[CONVERSATION HISTORY — do NOT repeat the welcome menu, continue naturally from where the conversation left off]"]
+            for msg in body.history:
+                label = "User" if msg.role == "user" else "Assistant"
+                lines.append(f"{label}: {msg.content}")
+            lines.append(f"[END OF HISTORY]\n\nUser: {user_message}")
+            user_message = "\n".join(lines)
 
         # Run the synchronous Foundry SDK stream in a background thread so the
         # async event loop is never blocked.  Events are forwarded via a queue.
