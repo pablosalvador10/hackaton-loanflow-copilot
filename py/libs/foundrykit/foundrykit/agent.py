@@ -307,16 +307,22 @@ class AgentManager:
                 mcp_tools=mcp_tools,
             )
 
+            event_cursor = 0
             with self._agents.runs.stream(
                 thread_id=thread_id,
                 agent_id=agent_id,
                 event_handler=collector,
             ) as stream:
                 for _event_type, _event_data, _func_return in stream:
-                    pass  # events are captured by the collector callbacks
+                    # Drain any events the callback appended during this iteration
+                    while event_cursor < len(collector.events):
+                        yield collector.events[event_cursor]
+                        event_cursor += 1
 
-            # Yield all collected events
-            yield from collector.events
+            # Yield any trailing events (run_completed, errors from on_done)
+            while event_cursor < len(collector.events):
+                yield collector.events[event_cursor]
+                event_cursor += 1
 
             logger.info(
                 "agent_stream_complete",
@@ -500,11 +506,24 @@ class _StreamCollector(AgentEventHandler):
         :param step: The run step (tool_calls or message_creation).
         """
         if step.type == "tool_calls" and step.status == "in_progress":
+            # Extract individual tool names if the step details expose them
+            tool_names: list[str] = []
+            try:
+                details = getattr(step, "step_details", None)
+                if details is not None:
+                    calls = getattr(details, "tool_calls", None) or []
+                    for tc in calls:
+                        fn = getattr(tc, "function", None)
+                        name = getattr(fn, "name", None) if fn else None
+                        if name:
+                            tool_names.append(name)
+            except Exception:
+                pass
             self.events.append(
                 AgentStreamEvent(
                     event_type="tool_start",
                     data="Executing tools...",
-                    metadata={"step_id": step.id},
+                    metadata={"step_id": step.id, "tool_names": tool_names},
                 )
             )
         elif step.type == "tool_calls" and step.status == "completed":

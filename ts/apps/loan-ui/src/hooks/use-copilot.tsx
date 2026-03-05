@@ -111,16 +111,13 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
    * ══════════════════════════════════════════════════════════════ */
 
   const sendToAzure = useCallback(async (userText: string) => {
+    // Show only the typing indicator until the first token arrives — no empty bubble.
     setIsTyping(true);
 
     const botMsgId = crypto.randomUUID();
-    const botMsg: CopilotMessage = {
-      id: botMsgId,
-      role: "assistant",
-      text: "",
-      timestamp: Date.now(),
-    };
-    setMessages(prev => [...prev, botMsg]);
+    let msgAdded = false;
+    // Card to attach when onDone fires (populated by onCard callback).
+    let pendingCard: { type: CopilotMessage["card"]; data?: Record<string, unknown> } | null = null;
 
     await streamConversationMessage(
       {
@@ -133,33 +130,65 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       },
       {
         onDelta: (text: string) => {
-          setMessages(prev =>
-            prev.map(m => m.id === botMsgId ? { ...m, text: m.text + text } : m)
-          );
+          if (!msgAdded) {
+            // First token: swap typing indicator for the real message bubble.
+            msgAdded = true;
+            setIsTyping(false);
+            setMessages(prev => [
+              ...prev,
+              { id: botMsgId, role: "assistant", text, timestamp: Date.now() } as CopilotMessage,
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m => m.id === botMsgId ? { ...m, text: m.text + text } : m)
+            );
+          }
         },
         onToolStart: () => {
-          // Could show a tool indicator
+          // Typing indicator already covers the "tool running" visual — no change needed.
+        },
+        onCard: (cardType, data) => {
+          pendingCard = { type: cardType as CopilotMessage["card"], data };
         },
         onDone: () => {
           setIsTyping(false);
-          // Save to history
+          // Save completed message to history and attach card if one was signalled.
           setMessages(prev => {
             const final = prev.find(m => m.id === botMsgId);
             if (final) {
               historyRef.current.push({ role: "assistant", content: final.text });
             }
+            if (pendingCard) {
+              const { type, data } = pendingCard;
+              return prev.map(m =>
+                m.id === botMsgId ? { ...m, card: type, data } : m
+              );
+            }
             return prev;
           });
         },
-        onError: (message: string) => {
+        onError: (errMsg: string) => {
           setIsTyping(false);
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === botMsgId
-                ? { ...m, text: m.text || `Sorry, something went wrong: ${message}` }
-                : m
-            )
-          );
+          if (!msgAdded) {
+            // Stream errored before any token — add an error bubble.
+            setMessages(prev => [
+              ...prev,
+              {
+                id: botMsgId,
+                role: "assistant",
+                text: `Sorry, something went wrong: ${errMsg}`,
+                timestamp: Date.now(),
+              } as CopilotMessage,
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === botMsgId
+                  ? { ...m, text: m.text || `Sorry, something went wrong: ${errMsg}` }
+                  : m
+              )
+            );
+          }
         },
       }
     );

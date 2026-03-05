@@ -17,8 +17,10 @@ Uses a Foundry Prompt Agent with five FunctionTools:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
+import threading
 import uuid
 from collections.abc import AsyncGenerator
 from pathlib import Path
@@ -27,11 +29,13 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
-from foundrykit import AgentManager, ToolRegistry, get_foundry_client
+from foundrykit import AgentManager, AgentStreamEvent, ToolRegistry, get_foundry_client
 from pydantic import BaseModel, Field
 
 from models.application import AuditEvent, Conversation, DocumentRecord, LoanApplication
-from services.mcp_setup import get_mcp_handler, get_mcp_tool, get_copilot_mcp_tools
+from services import mcp_functions as _mcp_fn_mod
+from services.mcp_functions import register_mcp_functions
+from services.mcp_setup import get_mcp_handler, get_mcp_tool
 from services.storage import get_storage
 from tools.assemble_application import assemble_application
 from tools.audit import log_audit_event
@@ -114,20 +118,72 @@ _registry.register(generate_approval_letter)
 _registry.register(log_audit_event)
 
 # Add MCP tool if configured (optional — enables remote tool servers)
+# Note: only the legacy server (azure_specs) uses McpTool since it has a public URL.
+# The 5 local copilot MCP servers are registered as Python FunctionTools below so
+# the SDK calls them locally instead of routing through Foundry's cloud MCP connector.
 _mcp = get_mcp_tool()
 if _mcp is not None:
     _registry.add_mcp_tool(_mcp)
     logger.info("mcp_tool_registered", label=_mcp.server_label)
 
-# Add copilot MCP tools (5 servers for the conversational lending flow)
-_copilot_mcps = get_copilot_mcp_tools()
-for _cmcp in _copilot_mcps:
-    _registry.add_mcp_tool(_cmcp)
-    logger.info("copilot_mcp_registered", label=_cmcp.server_label)
+# Register all 16 local MCP tools as native function tools (local execution).
+_mcp_fn_count = register_mcp_functions(_registry)
+logger.info("mcp_functions_registered", count=_mcp_fn_count)
 
-_all_mcp_tools = [t for t in [_mcp, *_copilot_mcps] if t is not None]
+# Only pass the azure_specs McpTool object to run_agent_stream (for approval handling).
+# Local MCP functions run automatically via the standard FunctionTool mechanism.
+_all_mcp_tools = [_mcp] if _mcp is not None else []
 
 _toolset = _registry.build_toolset()
+
+
+# ── Card determination ──────────────────────────────────────────
+
+# Tools in priority order — later tool in the list wins if multiple were called.
+_CARD_PRIORITY: list[tuple[str, str]] = [
+    ("verify_nafath",           "nafath-verify"),
+    ("verify_national_id",      "identity-card"),
+    ("get_customer_profile",    "identity-card"),
+    ("list_loan_products",      "product-list"),
+    ("get_product_by_intent",   "product-list"),
+    ("run_credit_check",        "credit-check"),
+    ("check_eligibility",       "credit-check"),
+    ("get_credit_score",        "credit-score"),
+    ("generate_offer",          "offer-card"),
+    ("calculate_monthly_payment", "offer-card"),
+    ("create_contract",         "contract-summary"),
+]
+
+
+def _determine_card(results: dict) -> dict | None:
+    """Select the richest card to show based on which tools were called.
+
+    Iterates priority list — the last matching entry wins so higher-value
+    actions (offers, contracts) always take precedence.
+
+    :param results: Dict of tool_name → parsed JSON result.
+    :return: ``{type, data}`` dict ready for the ``card`` SSE event, or None.
+    """
+    chosen_type: str | None = None
+    chosen_data: dict = {}
+
+    for tool_name, card_type in _CARD_PRIORITY:
+        if tool_name not in results:
+            continue
+        raw = results[tool_name]
+        # product-list expects { products: [...] }
+        if card_type == "product-list":
+            data = {"products": raw} if isinstance(raw, list) else (raw if isinstance(raw, dict) else {})
+        elif isinstance(raw, dict):
+            data = raw
+        else:
+            data = {}
+        chosen_type = card_type
+        chosen_data = data
+
+    if chosen_type is None:
+        return None
+    return {"type": chosen_type, "data": chosen_data}
 
 
 # ── SSE helpers ─────────────────────────────────────────────────
@@ -197,7 +253,7 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
         manager = AgentManager(client)
         chunks: list[str] = []
 
-        # Build user message — include document context if present
+        # Build user message — include conversation history and optional document context
         user_message = body.message
         if body.document_context:
             user_message = (
@@ -206,24 +262,85 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                 f"Document context: {body.document_context}"
             )
 
-        with manager.temporary_agent(
-            name="LoanOrigination",
-            instructions=_SYSTEM_PROMPT,
-            toolset=_toolset,
-        ) as agent:
-            # Pass MCP tools for streaming approval if MCP is enabled
-            stream_kwargs: dict[str, Any] = {}
-            if _all_mcp_tools:
-                stream_kwargs["mcp_tools"] = _all_mcp_tools
+        # Prepend conversation history so the agent has full context each turn.
+        # The Azure Agents API only accepts user-role messages when adding to a
+        # thread manually, so we inject the prior turns as a transcript prefix.
+        if body.history:
+            lines = ["[CONVERSATION HISTORY — do NOT repeat the welcome menu, continue naturally from where the conversation left off]"]
+            for msg in body.history:
+                label = "User" if msg.role == "user" else "Assistant"
+                lines.append(f"{label}: {msg.content}")
+            lines.append(f"[END OF HISTORY]\n\nUser: {user_message}")
+            user_message = "\n".join(lines)
 
-            for event in manager.run_agent_stream(
-                agent.id, user_message, **stream_kwargs
-            ):
-                if event.event_type == "text_delta":
-                    chunks.append(event.data)
-                    yield _sse_event("delta", {"text": event.data})
-                elif event.event_type == "error":
-                    yield _sse_event("error", {"message": event.data})
+        # Run the synchronous Foundry SDK stream in a background thread so the
+        # async event loop is never blocked.  Events are forwarded via a queue.
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[AgentStreamEvent | None] = asyncio.Queue()
+
+        def _produce() -> None:
+            """Run the agent stream in a worker thread, forwarding events to the queue."""
+            _mcp_fn_mod.clear_tool_results()
+            try:
+                with manager.temporary_agent(
+                    name="LoanOrigination",
+                    instructions=_SYSTEM_PROMPT,
+                    toolset=_toolset,
+                ) as agent:
+                    stream_kwargs: dict[str, Any] = {}
+                    if _all_mcp_tools:
+                        stream_kwargs["mcp_tools"] = _all_mcp_tools
+
+                    for event in manager.run_agent_stream(
+                        agent.id, user_message, **stream_kwargs
+                    ):
+                        loop.call_soon_threadsafe(queue.put_nowait, event)
+
+                # After the agent finishes, capture tool results and forward
+                tool_results = _mcp_fn_mod.get_tool_results()
+                if tool_results:
+                    loop.call_soon_threadsafe(
+                        queue.put_nowait,
+                        AgentStreamEvent(
+                            event_type="tool_results",
+                            data="",
+                            metadata={"results": tool_results},
+                        ),
+                    )
+            except Exception as exc:
+                loop.call_soon_threadsafe(
+                    queue.put_nowait,
+                    AgentStreamEvent(event_type="error", data=str(exc)),
+                )
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+
+        thread = threading.Thread(target=_produce, daemon=True)
+        thread.start()
+
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            if event.event_type == "text_delta":
+                chunks.append(event.data)
+                yield _sse_event("delta", {"text": event.data})
+            elif event.event_type == "tool_start":
+                tool_names = (event.metadata or {}).get("tool_names", [])
+                yield _sse_event("tool_start", {
+                    "label": event.data,
+                    "tool_names": tool_names,
+                })
+            elif event.event_type == "tool_complete":
+                yield _sse_event("tool_done", {})
+            elif event.event_type == "tool_results":
+                card = _determine_card(event.metadata.get("results", {}))
+                if card:
+                    yield _sse_event("card", card)
+            elif event.event_type == "error":
+                yield _sse_event("error", {"message": event.data})
+
+        thread.join(timeout=30)
 
         # Persist conversation
         full_response = "".join(chunks)

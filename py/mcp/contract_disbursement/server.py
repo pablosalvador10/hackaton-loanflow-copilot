@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("contract-disbursement", instructions="Contract signing and fund disbursement for Saudi lending.", host="0.0.0.0", port=8014)
+mcp = FastMCP("contract-disbursement", instructions="Contract signing and fund disbursement for Saudi lending.", host="0.0.0.0", port=8014, stateless_http=True)
 
 # Contract summaries by product type
 CONTRACT_TEMPLATES = {

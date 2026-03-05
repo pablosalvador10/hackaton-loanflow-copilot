@@ -72,11 +72,13 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       animation: {
-        "fade-in": "fadeIn 0.8s ease-out forwards",
-        "fade-in-up": "fadeInUp 0.8s ease-out forwards",
-        "fade-in-down": "fadeInDown 0.6s ease-out forwards",
+        "fade-in": "fadeIn 0.5s ease-out forwards",
+        "fade-in-up": "fadeInUp 0.6s ease-out forwards",
+        "fade-in-down": "fadeInDown 0.45s ease-out forwards",
+        "slide-in-up": "slideInUp 0.28s cubic-bezier(0.22,1,0.36,1) forwards",
         "pulse-dot": "pulseDot 1.4s ease-in-out infinite",
-        "scale-in": "scaleIn 0.3s ease-out forwards",
+        "scale-in": "scaleIn 0.25s cubic-bezier(0.22,1,0.36,1) forwards",
+        "glow-pulse": "glowPulse 3s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {
@@ -84,20 +86,28 @@ const config: Config = {
           "100%": { opacity: "1" },
         },
         fadeInUp: {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         fadeInDown: {
           "0%": { opacity: "0", transform: "translateY(-10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        slideInUp: {
+          "0%": { opacity: "0", transform: "translateY(12px) scale(0.985)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
         pulseDot: {
           "0%, 100%": { opacity: "0.2", transform: "scale(1)" },
           "50%": { opacity: "0.6", transform: "scale(1.8)" },
         },
         scaleIn: {
-          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "0%": { opacity: "0", transform: "scale(0.94)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        glowPulse: {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
         },
       },
     },

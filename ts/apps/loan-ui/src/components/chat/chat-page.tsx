@@ -15,6 +15,7 @@ export function ChatPage() {
   const {
     messages,
     isLoading,
+    toolCall,
     sendMessage,
     toasts,
     dismissToast,
@@ -27,7 +28,7 @@ export function ChatPage() {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        const b64 = result.includes(",") ? result.split(",")[1] : result;
+        const b64 = result.includes(",") ? (result.split(",")[1] ?? result) : result;
 
         const doc: UploadedDocument = {
           documentId: crypto.randomUUID(),
@@ -52,6 +53,7 @@ export function ChatPage() {
       <ChatMessageList
         messages={messages}
         isLoading={isLoading}
+        toolCall={toolCall}
         onPromptClick={sendMessage}
       />
 

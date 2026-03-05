@@ -6,7 +6,7 @@ import asyncio
 import json
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("identity-kyc", instructions="Identity verification and KYC tools for Saudi lending.", host="0.0.0.0", port=8010)
+mcp = FastMCP("identity-kyc", instructions="Identity verification and KYC tools for Saudi lending.", host="0.0.0.0", port=8010, stateless_http=True)
 
 # Mock customer profiles
 PROFILES = {

@@ -77,22 +77,22 @@ def get_mcp_tool():
 
 COPILOT_MCP_SERVERS = [
     {
-        "label": "identity-kyc",
+        "label": "identity_kyc",
         "url_attr": "mcp_identity_url",
         "allowed_tools": ["verify_nafath", "verify_national_id", "get_customer_profile"],
     },
     {
-        "label": "product-catalog",
+        "label": "product_catalog",
         "url_attr": "mcp_product_url",
         "allowed_tools": ["list_loan_products", "get_product_details", "get_product_by_intent"],
     },
     {
-        "label": "credit-eligibility",
+        "label": "credit_eligibility",
         "url_attr": "mcp_credit_url",
         "allowed_tools": ["run_credit_check", "get_credit_score", "check_eligibility"],
     },
     {
-        "label": "offers-pricing",
+        "label": "offers_pricing",
         "url_attr": "mcp_offers_url",
         "allowed_tools": [
             "generate_offer", "calculate_monthly_payment",
@@ -100,7 +100,7 @@ COPILOT_MCP_SERVERS = [
         ],
     },
     {
-        "label": "contract-disbursement",
+        "label": "contract_disbursement",
         "url_attr": "mcp_contract_url",
         "allowed_tools": [
             "create_contract", "verify_otp",

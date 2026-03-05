@@ -9,6 +9,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/* ── Active tool call indicator ── */
+
+export interface ToolCallState {
+  /** True while the agent is executing backend tools. */
+  active: boolean;
+  /** Names of the tools being called (may be empty if not surfaced). */
+  toolNames: string[];
+}
+
 /* ── Copilot-specific message with rich cards ── */
 
 export type CardType =
@@ -148,3 +157,25 @@ export interface UploadedDocument {
 /* ── Progress steps ── */
 
 export type ProgressStep = "identity" | "needs" | "product" | "approval" | "contract";
+
+/* ── Audit trail (backend compatibility) ── */
+
+export interface AuditEvent {
+  event_id: string;
+  application_id: string;
+  event_type: string;
+  description: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+/* ── Document record (backend compatibility) ── */
+
+export interface DocumentRecord {
+  document_id: string;
+  application_id: string;
+  file_name: string;
+  document_type: string;
+  uploaded_at: string;
+  quality_score?: number;
+}

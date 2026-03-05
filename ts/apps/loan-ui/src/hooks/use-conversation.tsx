@@ -19,7 +19,7 @@ import {
   type ReactNode,
 } from "react";
 import { streamConversationMessage } from "@/lib/api";
-import type { ChatMessage, UploadedDocument } from "@/types";
+import type { ChatMessage, ToolCallState, UploadedDocument } from "@/types";
 import type { ToastData } from "@/components/chat/toast";
 
 /* ── Types ── */
@@ -35,6 +35,7 @@ export interface StoredConversation {
 interface ConversationState {
   messages: ChatMessage[];
   isLoading: boolean;
+  toolCall: ToolCallState;
   conversationId: string;
   applicationId: string | null;
   conversations: StoredConversation[];
@@ -142,6 +143,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversations, setConversations] = useState<StoredConversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [toolCall, setToolCall] = useState<ToolCallState>({ active: false, toolNames: [] });
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [pendingDocument, setPendingDocument] = useState<UploadedDocument | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
@@ -262,16 +264,26 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       },
       {
         onDelta: (text: string) => {
+          // First token: clear the tool call indicator
+          setToolCall({ active: false, toolNames: [] });
           setMessages((prev) =>
             prev.map((m) =>
               m.id === botMsgId ? { ...m, content: m.content + text } : m
             )
           );
         },
+        onToolStart: (toolNames: string[]) => {
+          setToolCall({ active: true, toolNames });
+        },
+        onToolDone: () => {
+          setToolCall({ active: false, toolNames: [] });
+        },
         onDone: (_data: Record<string, unknown>) => {
+          setToolCall({ active: false, toolNames: [] });
           setIsLoading(false);
         },
         onError: (message: string) => {
+          setToolCall({ active: false, toolNames: [] });
           setMessages((prev) =>
             prev.map((m) =>
               m.id === botMsgId
@@ -306,6 +318,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       value={{
         messages,
         isLoading,
+        toolCall,
         conversationId: convIdRef.current,
         applicationId,
         conversations,
