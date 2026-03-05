@@ -33,7 +33,7 @@ from foundrykit import AgentManager, AgentStreamEvent, ToolRegistry, get_foundry
 from pydantic import BaseModel, Field
 
 from models.application import AuditEvent, Conversation, DocumentRecord, LoanApplication
-from services.mcp_setup import get_mcp_handler, get_mcp_tool
+from services.mcp_setup import get_mcp_handler, get_mcp_tool, get_copilot_mcp_tools
 from services.storage import get_storage
 from tools.assemble_application import assemble_application
 from tools.audit import log_audit_event
@@ -120,6 +120,14 @@ _mcp = get_mcp_tool()
 if _mcp is not None:
     _registry.add_mcp_tool(_mcp)
     logger.info("mcp_tool_registered", label=_mcp.server_label)
+
+# Add copilot MCP tools (5 servers for the conversational lending flow)
+_copilot_mcps = get_copilot_mcp_tools()
+for _cmcp in _copilot_mcps:
+    _registry.add_mcp_tool(_cmcp)
+    logger.info("copilot_mcp_registered", label=_cmcp.server_label)
+
+_all_mcp_tools = [t for t in [_mcp, *_copilot_mcps] if t is not None]
 
 _toolset = _registry.build_toolset()
 
@@ -225,8 +233,8 @@ async def _stream_loan_sse(body: StreamRequest) -> AsyncGenerator[str, None]:
                     toolset=_toolset,
                 ) as agent:
                     stream_kwargs: dict[str, Any] = {}
-                    if _mcp is not None:
-                        stream_kwargs["mcp_tools"] = [_mcp]
+                    if _all_mcp_tools:
+                        stream_kwargs["mcp_tools"] = _all_mcp_tools
 
                     for event in manager.run_agent_stream(
                         agent.id, user_message, **stream_kwargs

@@ -8,5 +8,7 @@
   "jupyter.runStartupCommands": [],
 
   // Disable automatic cell execution timeout
-  "notebook.cellExecution.timeout": 0
+  "notebook.cellExecution.timeout": 0,
+  "html.autoClosingTags": false,
+  "typescript.autoClosingTags": false
 }

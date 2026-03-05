@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOH AI Copilot — Lending Origination Hub | CREALOGIX</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cx-navy: #002B5C;
+            --cx-navy-light: #004080;
+            --cx-navy-dark: #001A3A;
+            --cx-teal: #00A3B4;
+            --cx-teal-light: #00C4D6;
+            --cx-teal-dark: #007A87;
+            --cx-cyan-glow: #00D4E8;
+            --cx-white: #FFFFFF;
+            --cx-gray-50: #F7F9FC;
+            --cx-gray-100: #EEF1F6;
+            --cx-gray-200: #DDE2EA;
+            --cx-gray-400: #9BA4B4;
+            --cx-gray-600: #5A6577;
+            --cx-gray-800: #2D3648;
+            --cx-text: #1A2038;
+            --cx-text-light: #6B7690;
+            --cx-border: #E2E6ED;
+            --cx-success: #00B880;
+            --cx-gradient: linear-gradient(135deg, #002B5C 0%, #004080 50%, #00A3B4 100%);
+            --cx-gradient-button: linear-gradient(135deg, #002B5C 0%, #004080 100%);
+            --cx-gradient-accent: linear-gradient(135deg, #00A3B4 0%, #00C4D6 100%);
+            --cx-ai-purple: #7C3AED;
+            --cx-ai-purple-light: #A78BFA;
+            --cx-ai-bg: #F5F3FF;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cx-gray-50);
+            color: var(--cx-text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==================== SCREEN MANAGEMENT ==================== */
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* ==================== WELCOME SCREEN ==================== */
+        .welcome-screen {
+            min-height: 100vh;
+            background: var(--cx-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0,163,180,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .pattern-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(0,163,180,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.03) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .logo-icon svg {
+            width: 44px;
+            height: 44px;
+        }
+
+        .logo-brand {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--cx-teal-light);
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 3px;
+        }
+
+        .logo-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        .welcome-hero {
+            margin-bottom: 48px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .welcome-hero h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        .welcome-hero h1 span {
+            color: var(--cx-cyan-glow);
+        }
+
+        .welcome-hero p {
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 48px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .pill {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 100px;
+            padding: 8px 18px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cta-section {
+            width: 100%;
+            max-width: 380px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px 32px;
+            background: #fff;
+            color: var(--cx-navy);
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .welcome-footer {
+            position: relative;
+            z-index: 1;
+            padding: 24px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .welcome-footer p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.5;
+        }
+
+        .sama-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+        }
+
+        /* ==================== COPILOT CHAT SCREEN ==================== */
+        .chat-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--cx-gray-50);
+        }
+
+        .chat-topbar {
+            background: var(--cx-navy);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .chat-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-topbar-logo {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--cx-teal-light);
+            letter-spacing: 2px;
+        }
+
+        .chat-topbar-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .chat-topbar-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, var(--cx-ai-purple), var(--cx-ai-purple-light));
+            font-size: 9px;
+            font-weight: 800;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+        }
+
+        .chat-topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-topbar-avatar {
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Progress tracker */
+        .copilot-progress {
+            background: #fff;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--cx-border);
+        }
+
+        .copilot-progress-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .copilot-progress-step {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--cx-gray-200);
+            transition: background 0.5s ease;
+        }
+
+        .copilot-progress-step.completed {
+            background: var(--cx-teal);
+        }
+
+        .copilot-progress-step.active {
+            background: linear-gradient(90deg, var(--cx-teal), var(--cx-teal-light));
+            animation: progressPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .copilot-progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .copilot-progress-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--cx-gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .copilot-progress-label.completed {
+            color: var(--cx-teal-dark);
+        }
+
+        .copilot-progress-label.active {
+            color: var(--cx-navy);
+            font-weight: 700;
+        }
+
+        /* Chat messages area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            scroll-behavior: smooth;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: messageIn 0.4s ease-out;
+        }
+
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .chat-avatar.ai {
+            background: linear-gradient(135deg, var(--cx-navy), var(--cx-teal));
+            color: #fff;
+        }
+
+        .chat-avatar.user {
+            background: var(--cx-gray-200);
+            color: var(--cx-gray-600);
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .chat-message.ai .chat-bubble {
+            background: #fff;
+            color: var(--cx-text);
+            border: 1px solid var(--cx-border);
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .chat-message.user .chat-bubble {
+            background: var(--cx-gradient-button);
+            color: #fff;
+            border-bottom-right-radius: 6px;
+        }
+
+        .chat-bubble strong {
+            font-weight: 700;
+        }
+
+        /* Quick reply buttons */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-reply {
+            padding: 10px 18px;
+            background: var(--cx-gray-50);
+            border: 1.5px solid var(--cx-border);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cx-navy);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-reply:hover {
+            background: var(--cx-navy);
+            color: #fff;
+            border-color: var(--cx-navy);
+            transform: translateY(-1px);
+        }
+
+        .quick-reply.selected {
+            background: var(--cx-navy);
+            color: #fff;
+            border-color: var(--cx-navy);
+        }
+
+        /* Inline cards in chat */
+        .chat-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--cx-border);
+            padding: 20px;
+            margin-top: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .chat-card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--cx-navy);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--cx-gray-100);
+        }
+
+        .chat-card-row:last-child {
+            border-bottom: none;
+        }
+
+        .chat-card-row-label {
+            color: var(--cx-text-light);
+        }
+
+        .chat-card-row-value {
+            font-weight: 600;
+            color: var(--cx-text);
+        }
+
+        .chat-card-row-value.highlight {
+            color: var(--cx-navy);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Loan product cards */
+        .product-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 14px;
+            border: 1.5px solid var(--cx-border);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .product-card:hover {
+            border-color: var(--cx-navy);
+            box-shadow: 0 2px 12px rgba(0,43,92,0.08);
+            transform: translateY(-1px);
+        }
+
+        .product-card.selected {
+            border-color: var(--cx-navy);
+            background: #F0F4FA;
+            box-shadow: 0 0 0 3px rgba(0,43,92,0.08);
+        }
+
+        .product-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .product-card-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--cx-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .product-card-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: #E8F8F2;
+            color: #007A54;
+        }
+
+        .product-card-desc {
+            font-size: 12px;
+            color: var(--cx-text-light);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .product-card-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .product-card-stat {
+            font-size: 11px;
+            color: var(--cx-gray-600);
+        }
+
+        .product-card-stat strong {
+            color: var(--cx-navy);
+        }
+
+        /* Slider in chat */
+        .chat-slider {
+            margin-top: 12px;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--cx-border);
+            padding: 20px;
+        }
+
+        .chat-slider-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cx-gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .chat-slider-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--cx-navy);
+            margin-bottom: 12px;
+        }
+
+        .chat-slider-value .currency {
+            font-size: 16px;
+            color: var(--cx-gray-400);
+            font-weight: 600;
+        }
+
+        .chat-slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--cx-gray-200);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .chat-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--cx-navy);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,43,92,0.25);
+            border: 3px solid #fff;
+        }
+
+        .chat-slider-range {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--cx-text-light);
+            margin-top: 6px;
+        }
+
+        .chat-slider-confirm {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px;
+            background: var(--cx-gradient-button);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .chat-slider-confirm:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Credit check animation in chat */
+        .chat-credit-check {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--cx-border);
+            padding: 24px;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .credit-check-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .credit-check-item.visible {
+            opacity: 1;
+        }
+
+        .credit-check-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        .credit-check-icon.pending {
+            background: var(--cx-gray-100);
+            color: var(--cx-gray-400);
+        }
+
+        .credit-check-icon.done {
+            background: #E8F8F2;
+            color: var(--cx-success);
+        }
+
+        .credit-check-text {
+            font-size: 13px;
+            color: var(--cx-text);
+            font-weight: 500;
+        }
+
+        .credit-check-status {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--cx-gray-400);
+        }
+
+        .credit-check-status.done {
+            color: var(--cx-success);
+        }
+
+        /* Credit score display */
+        .chat-credit-score {
+            background: linear-gradient(135deg, #F0F6FF 0%, #E8F0FE 100%);
+            border-radius: 16px;
+            border: 1px solid #D0DFEF;
+            padding: 24px;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .chat-credit-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            position: relative;
+        }
+
+        .chat-credit-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .chat-credit-ring-bg {
+            fill: none;
+            stroke: var(--cx-gray-200);
+            stroke-width: 8;
+        }
+
+        .chat-credit-ring-fill {
+            fill: none;
+            stroke: var(--cx-teal);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 2s ease-out;
+        }
+
+        .chat-credit-ring-fill.animate {
+            stroke-dashoffset: 75;
+        }
+
+        .chat-credit-ring-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .chat-credit-score-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--cx-navy);
+        }
+
+        .chat-credit-score-label {
+            font-size: 10px;
+            color: var(--cx-text-light);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .chat-credit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #E8F8F2;
+            color: #007A54;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid #B8E5D5;
+        }
+
+        /* Offer card in chat */
+        .chat-offer-card {
+            background: linear-gradient(135deg, #002B5C 0%, #004080 60%, #00A3B4 100%);
+            border-radius: 20px;
+            padding: 24px;
+            color: #fff;
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-offer-card::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(0,212,232,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .chat-offer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 100px;
+            padding: 5px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--cx-cyan-glow);
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .chat-offer-amount {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .chat-offer-amount .curr {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .chat-offer-sublabel {
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 18px;
+        }
+
+        .chat-offer-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .chat-offer-detail {
+            background: rgba(0,0,0,0.15);
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .chat-offer-detail-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .chat-offer-detail-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .chat-offer-detail-value .unit {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 500;
+        }
+
+        /* Sharia compliance badge */
+        .sharia-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #E8F8F2;
+            border: 1px solid #B8E5D5;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #007A54;
+            font-weight: 600;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--cx-gray-400);
+            border-radius: 50%;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* Chat input area */
+        .chat-input-area {
+            background: #fff;
+            border-top: 1px solid var(--cx-border);
+            padding: 16px 20px;
+            position: sticky;
+            bottom: 0;
+            z-index: 40;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1.5px solid var(--cx-border);
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            color: var(--cx-text);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--cx-navy);
+            box-shadow: 0 0 0 3px rgba(0,43,92,0.06);
+        }
+
+        .chat-input::placeholder {
+            color: #BFC6D2;
+        }
+
+        .chat-send {
+            width: 48px;
+            height: 48px;
+            background: var(--cx-gradient-button);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .chat-send:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,43,92,0.2);
+        }
+
+        .chat-send svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .chat-input-hint {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--cx-gray-400);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Success celebration */
+        .celebration-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,20,40,0.85);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .celebration-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .celebration-content {
+            text-align: center;
+            color: #fff;
+            padding: 40px 24px;
+            max-width: 400px;
+        }
+
+        .celebration-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #00B880 0%, #00D4A0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: scaleIn 0.6s ease-out;
+            box-shadow: 0 8px 32px rgba(0,184,128,0.3);
+        }
+
+        .celebration-icon svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .celebration-content h2 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .celebration-content p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .celebration-amount {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .celebration-amount .curr {
+            font-size: 20px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .celebration-sublabel {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 32px;
+        }
+
+        .btn-celebration {
+            width: 100%;
+            padding: 18px;
+            background: #fff;
+            color: var(--cx-navy);
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-celebration:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chat-bubble { max-width: 88%; }
+            .chat-offer-amount { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== WELCOME SCREEN ==================== -->
+<div id="welcomeScreen" class="screen welcome-screen active">
+    <div class="pattern-overlay"></div>
+    <div class="welcome-content">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 44 44" fill="none">
+                    <path d="M22 4L38 12V28L22 36L6 28V12L22 4Z" stroke="white" stroke-width="2" fill="none"/>
+                    <path d="M22 4L38 12L22 20L6 12L22 4Z" fill="rgba(255,255,255,0.2)"/>
+                    <circle cx="22" cy="20" r="6" fill="rgba(0,212,232,0.6)" stroke="white" stroke-width="1.5"/>
+                    <path d="M19 20L21 22L25 18" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="logo-brand">CREALOGIX</div>
+            <div class="logo-text">LOH</div>
+            <div class="logo-subtitle">AI Lending Copilot</div>
+        </div>
+
+        <div class="welcome-hero">
+            <h1>Your AI Guide to <span>Smart Lending</span></h1>
+            <p>Chat naturally with our AI Copilot to find the perfect Sharia-compliant financing solution — no forms, just a conversation.</p>
+        </div>
+
+        <div class="feature-pills">
+            <div class="pill"><span class="pill-icon">&#x1F4AC;</span> Natural Language</div>
+            <div class="pill"><span class="pill-icon">&#x2615;</span> Sharia Compliant</div>
+            <div class="pill"><span class="pill-icon">&#x26A1;</span> Instant Decisions</div>
+            <div class="pill"><span class="pill-icon">&#x1F512;</span> SAMA Regulated</div>
+        </div>
+
+        <div class="cta-section">
+            <button class="btn-primary" onclick="startCopilot()">
+                Start a Conversation
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="welcome-footer">
+        <div class="sama-badge">&#x1F3DB; SAMA Licensed & Regulated</div>
+        <p>Powered by <strong>CREALOGIX</strong> LOH Platform<br>Sharia-compliant digital lending</p>
+    </div>
+</div>
+
+<!-- ==================== COPILOT CHAT SCREEN ==================== -->
+<div id="chatScreen" class="screen chat-screen">
+    <div class="chat-topbar">
+        <div class="chat-topbar-brand">
+            <div class="chat-topbar-logo">CREALOGIX</div>
+            <div class="chat-topbar-divider"></div>
+            <div class="chat-topbar-title">
+                LOH Copilot
+                <span class="ai-badge">AI</span>
+            </div>
+        </div>
+        <div class="chat-topbar-user">
+            <div class="chat-topbar-avatar">MS</div>
+        </div>
+    </div>
+
+    <!-- Progress tracker -->
+    <div class="copilot-progress">
+        <div class="copilot-progress-bar">
+            <div class="copilot-progress-step active" id="prog1"></div>
+            <div class="copilot-progress-step" id="prog2"></div>
+            <div class="copilot-progress-step" id="prog3"></div>
+            <div class="copilot-progress-step" id="prog4"></div>
+            <div class="copilot-progress-step" id="prog5"></div>
+        </div>
+        <div class="copilot-progress-labels">
+            <div class="copilot-progress-label active" id="progLabel1">Identity</div>
+            <div class="copilot-progress-label" id="progLabel2">Needs</div>
+            <div class="copilot-progress-label" id="progLabel3">Product</div>
+            <div class="copilot-progress-label" id="progLabel4">Approval</div>
+            <div class="copilot-progress-label" id="progLabel5">Contract</div>
+        </div>
+    </div>
+
+    <!-- Chat messages -->
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will be injected here -->
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+            <button class="chat-send" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+        <div class="chat-input-hint">Powered by LOH AI Copilot &middot; Your data is encrypted &amp; secure</div>
+    </div>
+</div>
+
+<!-- ==================== CELEBRATION OVERLAY ==================== -->
+<div class="celebration-overlay" id="celebrationOverlay">
+    <div class="celebration-content">
+        <div class="celebration-icon">
+            <svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="14 24 22 32 34 16"></polyline>
+            </svg>
+        </div>
+        <h2>Congratulations!</h2>
+        <p>Your financing has been approved and funds are being transferred to your account.</p>
+        <div class="celebration-amount"><span class="curr">SAR </span>150,000</div>
+        <div class="celebration-sublabel">Disbursed to account ending in •••4821</div>
+        <button class="btn-celebration" onclick="location.reload()">View Dashboard</button>
+    </div>
+</div>
+
+<script>
+    // ==================== CONVERSATION ENGINE ====================
+
+    const DEMO_USER = {
+        name: 'Mohammed Al-Salem',
+        initials: 'MS',
+        id: '1088******',
+        employer: 'Saudi Aramco',
+        salary: '28,500',
+        creditScore: 742
+    };
+
+    let currentStep = 0;
+    const STEPS = ['identity', 'needs', 'product', 'approval', 'contract'];
+
+    // Conversation flow - each step has AI messages and expected interactions
+    const conversationFlow = [
+        // Step 0: Welcome & Identity
+        {
+            aiMessages: [
+                {
+                    text: `Welcome to LOH! I'm your AI Lending Copilot. I'm here to help you find the perfect Sharia-compliant financing solution. &#x1F44B;`,
+                    delay: 600
+                },
+                {
+                    text: `To get started, I'll need to verify your identity. How would you like to proceed?`,
+                    delay: 1200,
+                    quickReplies: ['Verify with Nafath', 'Enter National ID']
+                }
+            ]
+        },
+        // Step 1: Nafath verification result + needs discovery
+        {
+            aiMessages: [
+                {
+                    text: `Connecting to Nafath... Please approve the request on your Nafath app.`,
+                    delay: 800,
+                    showCard: 'nafath-verify'
+                },
+                {
+                    text: `Identity verified successfully! Welcome, <strong>${DEMO_USER.name}</strong>.`,
+                    delay: 3500,
+                    showCard: 'identity-card'
+                },
+                {
+                    text: `Now, tell me — what are you looking for today? You can describe your needs in your own words, or pick one of these common options:`,
+                    delay: 4800,
+                    quickReplies: ['I want to buy a car', 'I need a personal loan', 'Home renovation financing', 'Something else']
+                }
+            ]
+        },
+        // Step 2: Product selection & amount
+        {
+            aiMessages: [
+                {
+                    text: `Great choice! Based on your needs, I've found these Sharia-compliant financing options for you:`,
+                    delay: 800,
+                    showCard: 'product-list'
+                }
+            ]
+        },
+        // Step 3: Amount selection
+        {
+            aiMessages: [
+                {
+                    text: `Excellent! <strong>Murabaha Auto Financing</strong> is our most popular option for vehicle purchases. How much financing do you need?`,
+                    delay: 800,
+                    showCard: 'amount-slider'
+                }
+            ]
+        },
+        // Step 4: Credit check & offer
+        {
+            aiMessages: [
+                {
+                    text: `Let me check your eligibility. This will only take a moment...`,
+                    delay: 600,
+                    showCard: 'credit-check'
+                },
+                {
+                    text: `Great news! Your credit assessment is complete.`,
+                    delay: 5500,
+                    showCard: 'credit-score'
+                },
+                {
+                    text: `Based on your profile, here's your personalized offer:`,
+                    delay: 7000,
+                    showCard: 'offer-card'
+                },
+                {
+                    text: `Would you like to proceed with this offer?`,
+                    delay: 8200,
+                    quickReplies: ['Accept this offer', 'Adjust the amount', 'I need to think about it']
+                }
+            ]
+        },
+        // Step 5: Contract & disbursement
+        {
+            aiMessages: [
+                {
+                    text: `Wonderful! I'm preparing your Murabaha contract. This is a <strong>Sharia-compliant</strong> sale agreement where the bank purchases the asset and sells it to you at an agreed markup.`,
+                    delay: 800,
+                    showCard: 'contract-summary'
+                },
+                {
+                    text: `I've sent a verification code to your registered mobile number. Please enter the OTP to digitally sign your contract.`,
+                    delay: 2400,
+                    quickReplies: ['7 2 4 9 (Confirm OTP)']
+                }
+            ]
+        },
+        // Step 6: Success
+        {
+            aiMessages: [
+                {
+                    text: `Contract signed successfully! Processing your disbursement via SADAD...`,
+                    delay: 800
+                },
+                {
+                    text: `All done! Your financing of <strong>SAR 150,000</strong> has been disbursed. You'll receive an SMS confirmation shortly. Thank you for choosing LOH! &#x1F389;`,
+                    delay: 3000,
+                    triggerCelebration: true
+                }
+            ]
+        }
+    ];
+
+    function startCopilot() {
+        document.getElementById('welcomeScreen').classList.remove('active');
+        document.getElementById('chatScreen').classList.add('active');
+        setTimeout(() => playStep(0), 500);
+    }
+
+    function playStep(stepIndex) {
+        if (stepIndex >= conversationFlow.length) return;
+        const step = conversationFlow[stepIndex];
+        step.aiMessages.forEach((msg, i) => {
+            setTimeout(() => {
+                // Show typing indicator first
+                showTyping();
+                setTimeout(() => {
+                    hideTyping();
+                    addAIMessage(msg);
+                }, 600);
+            }, msg.delay);
+        });
+    }
+
+    function addAIMessage(msg) {
+        const container = document.getElementById('chatMessages');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chat-message ai';
+
+        let cardHTML = '';
+        if (msg.showCard) {
+            cardHTML = getCardHTML(msg.showCard);
+        }
+
+        let quickRepliesHTML = '';
+        if (msg.quickReplies) {
+            quickRepliesHTML = '<div class="quick-replies">';
+            msg.quickReplies.forEach(r => {
+                quickRepliesHTML += `<button class="quick-reply" onclick="handleQuickReply(this, '${r.replace(/'/g, "\\'")}')">${r}</button>`;
+            });
+            quickRepliesHTML += '</div>';
+        }
+
+        wrapper.innerHTML = `
+            <div class="chat-avatar ai">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+                <div class="chat-bubble">${msg.text}</div>
+                ${cardHTML}
+                ${quickRepliesHTML}
+            </div>
+        `;
+
+        container.appendChild(wrapper);
+        scrollToBottom();
+
+        // Trigger animations for credit check
+        if (msg.showCard === 'credit-check') {
+            animateCreditCheck();
+        }
+        if (msg.showCard === 'credit-score') {
+            setTimeout(() => {
+                const ring = document.querySelector('.chat-credit-ring-fill');
+                if (ring) ring.classList.add('animate');
+            }, 200);
+        }
+        if (msg.triggerCelebration) {
+            setTimeout(() => {
+                document.getElementById('celebrationOverlay').classList.add('active');
+            }, 1500);
+        }
+    }
+
+    function addUserMessage(text) {
+        const container = document.getElementById('chatMessages');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chat-message user';
+        wrapper.innerHTML = `
+            <div class="chat-avatar user">${DEMO_USER.initials}</div>
+            <div class="chat-bubble">${text}</div>
+        `;
+        container.appendChild(wrapper);
+        scrollToBottom();
+    }
+
+    function showTyping() {
+        const container = document.getElementById('chatMessages');
+        const existing = document.getElementById('typingIndicator');
+        if (existing) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chat-message ai';
+        wrapper.id = 'typingIndicator';
+        wrapper.innerHTML = `
+            <div class="chat-avatar ai">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="chat-bubble">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(wrapper);
+        scrollToBottom();
+    }
+
+    function hideTyping() {
+        const el = document.getElementById('typingIndicator');
+        if (el) el.remove();
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('chatMessages');
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 50);
+    }
+
+    function handleQuickReply(btn, text) {
+        // Disable all quick replies in the same group
+        const group = btn.parentElement;
+        group.querySelectorAll('.quick-reply').forEach(b => {
+            b.disabled = true;
+            b.style.opacity = '0.5';
+            b.style.cursor = 'default';
+        });
+        btn.classList.add('selected');
+        btn.style.opacity = '1';
+
+        addUserMessage(text);
+
+        // Advance conversation based on current step
+        currentStep++;
+        updateProgress(currentStep);
+
+        setTimeout(() => playStep(currentStep), 800);
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        addUserMessage(text);
+
+        currentStep++;
+        updateProgress(currentStep);
+
+        setTimeout(() => playStep(currentStep), 800);
+    }
+
+    function updateProgress(step) {
+        for (let i = 1; i <= 5; i++) {
+            const bar = document.getElementById('prog' + i);
+            const label = document.getElementById('progLabel' + i);
+            bar.className = 'copilot-progress-step';
+            label.className = 'copilot-progress-label';
+
+            if (i < step) {
+                bar.classList.add('completed');
+                label.classList.add('completed');
+            } else if (i === step) {
+                bar.classList.add('active');
+                label.classList.add('active');
+            }
+        }
+    }
+
+    function getCardHTML(type) {
+        switch(type) {
+            case 'nafath-verify':
+                return `
+                    <div class="chat-card" style="text-align: center;">
+                        <div style="font-size: 40px; font-weight: 800; color: var(--cx-navy); letter-spacing: 8px; margin: 12px 0;">47</div>
+                        <div style="font-size: 12px; color: var(--cx-text-light);">Match this number in your Nafath app</div>
+                        <div style="margin-top: 12px;">
+                            <div class="typing-indicator" style="justify-content: center;">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                            <div style="font-size: 11px; color: var(--cx-gray-400); margin-top: 4px;">Waiting for approval...</div>
+                        </div>
+                    </div>
+                `;
+            case 'identity-card':
+                return `
+                    <div class="chat-card">
+                        <div class="chat-card-title">&#x2705; Identity Verified</div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Full Name</span>
+                            <span class="chat-card-row-value">${DEMO_USER.name}</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">National ID</span>
+                            <span class="chat-card-row-value">${DEMO_USER.id}</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Employer</span>
+                            <span class="chat-card-row-value">${DEMO_USER.employer}</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Monthly Salary</span>
+                            <span class="chat-card-row-value">SAR ${DEMO_USER.salary}</span>
+                        </div>
+                    </div>
+                `;
+            case 'product-list':
+                return `
+                    <div class="product-cards">
+                        <div class="product-card" onclick="selectProduct(this, 0)">
+                            <div class="product-card-header">
+                                <div class="product-card-name">&#x1F697; Murabaha Auto</div>
+                                <div class="product-card-badge">Recommended</div>
+                            </div>
+                            <div class="product-card-desc">Cost-plus financing for vehicle purchase. Bank buys the car and sells to you at an agreed profit margin.</div>
+                            <div class="product-card-stats">
+                                <div class="product-card-stat">Up to <strong>SAR 500K</strong></div>
+                                <div class="product-card-stat">Tenure: <strong>5 years</strong></div>
+                                <div class="product-card-stat">From <strong>3.5%</strong> APR</div>
+                            </div>
+                        </div>
+                        <div class="product-card" onclick="selectProduct(this, 1)">
+                            <div class="product-card-header">
+                                <div class="product-card-name">&#x1F3E0; Ijara Lease</div>
+                                <div class="product-card-badge" style="background: #E8F0FE; color: var(--cx-navy);">Popular</div>
+                            </div>
+                            <div class="product-card-desc">Lease-to-own arrangement. Bank purchases and leases the asset to you with option to own at end of term.</div>
+                            <div class="product-card-stats">
+                                <div class="product-card-stat">Up to <strong>SAR 300K</strong></div>
+                                <div class="product-card-stat">Tenure: <strong>4 years</strong></div>
+                                <div class="product-card-stat">From <strong>4.0%</strong> APR</div>
+                            </div>
+                        </div>
+                        <div class="product-card" onclick="selectProduct(this, 2)">
+                            <div class="product-card-header">
+                                <div class="product-card-name">&#x1F4B0; Tawarruq Personal</div>
+                            </div>
+                            <div class="product-card-desc">Commodity-based personal financing. Get cash deposited directly to your account through commodity trading.</div>
+                            <div class="product-card-stats">
+                                <div class="product-card-stat">Up to <strong>SAR 250K</strong></div>
+                                <div class="product-card-stat">Tenure: <strong>5 years</strong></div>
+                                <div class="product-card-stat">From <strong>4.5%</strong> APR</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sharia-inline">&#x2615; All products are certified Sharia-compliant by an independent Sharia board</div>
+                `;
+            case 'amount-slider':
+                return `
+                    <div class="chat-slider">
+                        <div class="chat-slider-label">Financing Amount</div>
+                        <div class="chat-slider-value" id="sliderValue"><span class="currency">SAR </span>150,000</div>
+                        <input type="range" min="50000" max="500000" value="150000" step="5000" oninput="updateSlider(this.value)">
+                        <div class="chat-slider-range">
+                            <span>SAR 50,000</span>
+                            <span>SAR 500,000</span>
+                        </div>
+                        <button class="chat-slider-confirm" onclick="confirmAmount()">Confirm Amount</button>
+                    </div>
+                `;
+            case 'credit-check':
+                return `
+                    <div class="chat-credit-check" id="creditCheckCard">
+                        <div class="credit-check-item" id="cc1">
+                            <div class="credit-check-icon pending">&#x23F3;</div>
+                            <div class="credit-check-text">Verifying identity with SIMAH</div>
+                            <div class="credit-check-status">Pending</div>
+                        </div>
+                        <div class="credit-check-item" id="cc2">
+                            <div class="credit-check-icon pending">&#x23F3;</div>
+                            <div class="credit-check-text">Checking credit bureau records</div>
+                            <div class="credit-check-status">Pending</div>
+                        </div>
+                        <div class="credit-check-item" id="cc3">
+                            <div class="credit-check-icon pending">&#x23F3;</div>
+                            <div class="credit-check-text">Analyzing income & obligations</div>
+                            <div class="credit-check-status">Pending</div>
+                        </div>
+                        <div class="credit-check-item" id="cc4">
+                            <div class="credit-check-icon pending">&#x23F3;</div>
+                            <div class="credit-check-text">Calculating risk assessment</div>
+                            <div class="credit-check-status">Pending</div>
+                        </div>
+                    </div>
+                `;
+            case 'credit-score':
+                return `
+                    <div class="chat-credit-score">
+                        <div class="chat-credit-ring">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="chat-credit-ring-bg" cx="60" cy="60" r="50"/>
+                                <circle class="chat-credit-ring-fill" cx="60" cy="60" r="50"/>
+                            </svg>
+                            <div class="chat-credit-ring-center">
+                                <div class="chat-credit-score-value">${DEMO_USER.creditScore}</div>
+                                <div class="chat-credit-score-label">SIMAH</div>
+                            </div>
+                        </div>
+                        <div class="chat-credit-badge">&#x2B50; Excellent Credit Score</div>
+                    </div>
+                `;
+            case 'offer-card':
+                return `
+                    <div class="chat-offer-card">
+                        <div class="chat-offer-badge">&#x2728; PRE-APPROVED OFFER</div>
+                        <div class="chat-offer-amount"><span class="curr">SAR </span>150,000</div>
+                        <div class="chat-offer-sublabel">Murabaha Auto Financing</div>
+                        <div class="chat-offer-details">
+                            <div class="chat-offer-detail">
+                                <div class="chat-offer-detail-label">Monthly</div>
+                                <div class="chat-offer-detail-value">3,125 <span class="unit">SAR</span></div>
+                            </div>
+                            <div class="chat-offer-detail">
+                                <div class="chat-offer-detail-label">Tenure</div>
+                                <div class="chat-offer-detail-value">60 <span class="unit">months</span></div>
+                            </div>
+                            <div class="chat-offer-detail">
+                                <div class="chat-offer-detail-label">Rate</div>
+                                <div class="chat-offer-detail-value">3.75<span class="unit">%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sharia-inline">&#x2615; Murabaha structure — certified by Sharia Supervisory Board</div>
+                `;
+            case 'contract-summary':
+                return `
+                    <div class="chat-card">
+                        <div class="chat-card-title">&#x1F4C4; Murabaha Contract Summary</div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Contract Type</span>
+                            <span class="chat-card-row-value">Murabaha Sale</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Purchase Price</span>
+                            <span class="chat-card-row-value">SAR 150,000</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Bank Profit</span>
+                            <span class="chat-card-row-value">SAR 37,500</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Total Sale Price</span>
+                            <span class="chat-card-row-value highlight">SAR 187,500</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Installments</span>
+                            <span class="chat-card-row-value">60 x SAR 3,125</span>
+                        </div>
+                        <div class="chat-card-row">
+                            <span class="chat-card-row-label">Insurance</span>
+                            <span class="chat-card-row-value">Included</span>
+                        </div>
+                    </div>
+                `;
+            default:
+                return '';
+        }
+    }
+
+    function selectProduct(card, index) {
+        document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+
+        setTimeout(() => {
+            addUserMessage('I\'ll go with Murabaha Auto Financing');
+            currentStep++;
+            updateProgress(currentStep);
+            setTimeout(() => playStep(currentStep), 800);
+        }, 400);
+    }
+
+    function updateSlider(value) {
+        const formatted = parseInt(value).toLocaleString();
+        document.getElementById('sliderValue').innerHTML = `<span class="currency">SAR </span>${formatted}`;
+    }
+
+    function confirmAmount() {
+        const slider = document.querySelector('.chat-slider input[type="range"]');
+        const value = parseInt(slider.value).toLocaleString();
+        addUserMessage(`SAR ${value} please`);
+        currentStep++;
+        updateProgress(currentStep);
+        setTimeout(() => playStep(currentStep), 800);
+    }
+
+    function animateCreditCheck() {
+        const items = ['cc1', 'cc2', 'cc3', 'cc4'];
+        items.forEach((id, i) => {
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.add('visible');
+                el.querySelector('.credit-check-icon').classList.remove('pending');
+                el.querySelector('.credit-check-icon').classList.add('done');
+                el.querySelector('.credit-check-icon').textContent = '\u2714';
+                el.querySelector('.credit-check-status').classList.add('done');
+                el.querySelector('.credit-check-status').textContent = 'Done';
+                scrollToBottom();
+            }, 800 + (i * 900));
+        });
+    }
+</script>
+
+</body>
+</html>
