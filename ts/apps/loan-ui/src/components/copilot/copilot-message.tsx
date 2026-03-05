@@ -11,6 +11,8 @@ import { CreditScoreCard } from "./cards/credit-score-card";
 import { OfferCard } from "./cards/offer-card";
 import { ContractSummaryCard } from "./cards/contract-summary-card";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Props {
   message: CopilotMessageType;
@@ -61,8 +63,17 @@ export function CopilotMessage({ message }: Props) {
             : "bg-white border border-[#E8EBF0] rounded-bl-[6px] text-[#1A2038] shadow-[0_2px_8px_rgba(0,0,0,0.05)]"
         }`}
           style={isUser ? { background: "linear-gradient(135deg, #002B5C 0%, #004080 100%)" } : undefined}
-          dangerouslySetInnerHTML={{ __html: message.text }}
-        />
+        >
+          {isUser ? (
+            <span>{message.text}</span>
+          ) : (
+            <div className="copilot-prose">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          )}
+        </div>
 
         {/* Card */}
         {CardComponent && <CardComponent data={message.data} />}
