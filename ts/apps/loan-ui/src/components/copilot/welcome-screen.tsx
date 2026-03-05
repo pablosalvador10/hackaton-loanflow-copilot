@@ -1,175 +1,98 @@
 /**
- * Welcome screen — landing page matching AIConversational.html design.
- * Navy gradient background with CREALOGIX LOH branding.
+ * Welcome screen — clean, professional landing for LOH AI Lending Copilot.
  */
 
 import { useCopilot } from "@/hooks/use-copilot";
+import { MessageSquare, Shield, Zap, CheckCircle } from "lucide-react";
+import type { ReactNode } from "react";
 
-const pills = [
-  { icon: "💬", label: "Natural Language" },
-  { icon: "☕", label: "Sharia Compliant" },
-  { icon: "⚡", label: "Instant Decisions" },
-  { icon: "🔒", label: "SAMA Regulated" },
+const features: { icon: ReactNode; label: string; desc: string }[] = [
+  { icon: <MessageSquare className="w-5 h-5" />, label: "Conversational", desc: "Chat in natural language" },
+  { icon: <Shield className="w-5 h-5" />, label: "Sharia Compliant", desc: "Certified by Sharia board" },
+  { icon: <Zap className="w-5 h-5" />, label: "Instant Decisions", desc: "Real-time credit analysis" },
+  { icon: <CheckCircle className="w-5 h-5" />, label: "SAMA Regulated", desc: "Licensed & secure" },
 ];
 
 export function WelcomeScreen() {
   const { startCopilot } = useCopilot();
 
   return (
-    <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(135deg, #002B5C 0%, #004080 50%, #00A3B4 100%)",
-      }}
-    >
-      {/* Pattern overlays */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 80%, rgba(0,163,180,0.12) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 50%)",
-        }}
-      />
-      <div
-        className="absolute -top-1/2 -right-[30%] w-[600px] h-[600px] rounded-full pointer-events-none animate-glow-pulse"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(0,163,180,0.22) 0%, transparent 70%)",
-        }}
-      />
+    <div className="min-h-screen flex flex-col bg-[#FAFBFD] relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 left-0 right-0 h-[480px] bg-gradient-to-b from-[#002B5C] via-[#003A75] to-transparent" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.06] pointer-events-none"
+        style={{ background: "radial-gradient(circle, #00A3B4, transparent 70%)", transform: "translate(30%, -40%)" }} />
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-6 py-10 text-center">
-        {/* Logo */}
-        <div className="mb-8 animate-fade-in-down">
-          <div
-            className="w-20 h-20 mx-auto mb-4 rounded-[20px] flex items-center justify-center border border-white/15"
-            style={{
-              background: "rgba(255,255,255,0.12)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <svg viewBox="0 0 44 44" fill="none" className="w-11 h-11">
-              <path
-                d="M22 4L38 12V28L22 36L6 28V12L22 4Z"
-                stroke="white"
-                strokeWidth="2"
-                fill="none"
-              />
-              <path
-                d="M22 4L38 12L22 20L6 12L22 4Z"
-                fill="rgba(255,255,255,0.2)"
-              />
-              <circle
-                cx="22"
-                cy="20"
-                r="6"
-                fill="rgba(0,212,232,0.6)"
-                stroke="white"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M19 20L21 22L25 18"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+      <div className="relative z-10 flex-1 flex flex-col">
+        {/* Header */}
+        <header className="flex items-center gap-3 px-8 pt-8 pb-4">
+          <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="white" strokeWidth="1.5" />
+              <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="1.5" />
+              <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="1.5" />
             </svg>
           </div>
-          <div
-            className="text-[11px] font-bold tracking-[3px] uppercase"
-            style={{ color: "#00C4D6" }}
-          >
-            CREALOGIX
+          <div>
+            <div className="text-[10px] font-semibold tracking-[2.5px] uppercase text-white/50">CREALOGIX</div>
+            <div className="text-lg font-bold text-white tracking-wide leading-none">LOH</div>
           </div>
-          <div className="text-[28px] font-extrabold text-white tracking-[3px]">
-            LOH
-          </div>
-          <div className="text-[13px] text-white/60 tracking-[1.5px] mt-1">
-            AI Lending Copilot
-          </div>
-        </div>
+        </header>
 
-        {/* Hero */}
-        <div className="mb-10 animate-fade-in-up">
-          <h1 className="text-[32px] font-bold text-white leading-tight mb-4">
-            Your AI Guide to{" "}
-            <span style={{ color: "#00D4E8" }}>Smart Lending</span>
-          </h1>
-          <p className="text-base text-white/70 leading-relaxed max-w-[340px] mx-auto">
-            Chat naturally with our AI Copilot to find the perfect
-            Sharia-compliant financing solution — no forms, just a conversation.
-          </p>
-        </div>
-
-        {/* Pills — staggered entry */}
-        <div className="flex flex-wrap gap-2.5 justify-center mb-10">
-          {pills.map((p, i) => (
-            <div
-              key={p.label}
-              className="flex items-center gap-1.5 px-[18px] py-2 rounded-full text-[13px] text-white/90 border border-white/12 animate-fade-in-up"
-              style={{
-                background: "rgba(255,255,255,0.1)",
-                backdropFilter: "blur(10px)",
-                animationDelay: `${0.25 + i * 0.07}s`,
-                animationFillMode: "both",
-              }}
-            >
-              <span>{p.icon}</span> {p.label}
+        {/* Hero area */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+          <div className="max-w-lg w-full text-center mb-10 animate-fade-in-down">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6 text-xs font-medium text-[#00D4E8] bg-white/[0.08] border border-white/[0.08] backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00D4E8] animate-pulse" />
+              AI-Powered Lending Platform
             </div>
-          ))}
-        </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-[1.1] mb-4 tracking-tight">
+              Smart Lending,<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4E8] to-[#00A3B4]">Made Simple</span>
+            </h1>
+            <p className="text-base text-white/60 leading-relaxed max-w-sm mx-auto">
+              Find the perfect Sharia-compliant financing through a simple conversation — no forms required.
+            </p>
+          </div>
 
-        {/* CTA */}
-        <div
-          className="w-full max-w-[380px] animate-fade-in-up"
-          style={{ animationDelay: "0.55s", animationFillMode: "both" }}
-        >
-          <button
-            onClick={startCopilot}
-            className="w-full py-[18px] px-8 bg-white rounded-2xl text-[17px] font-bold flex items-center justify-center gap-2.5 group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(0,0,0,0.25)] active:scale-[0.98]"
-            style={{
-              color: "#002B5C",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-            }}
-          >
-            Start a Conversation
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transition-transform duration-200 group-hover:translate-x-0.5"
+          {/* Feature grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full mb-10 animate-fade-in-up"
+            style={{ animationDelay: "0.15s", animationFillMode: "both" }}>
+            {features.map((f) => (
+              <div key={f.label}
+                className="flex flex-col items-center gap-2 rounded-2xl px-4 py-5 bg-white border border-[#E8ECF2] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-[#F0F7FF] text-[#002B5C] flex items-center justify-center">
+                  {f.icon}
+                </div>
+                <div className="text-xs font-semibold text-[#1A2038]">{f.label}</div>
+                <div className="text-[10px] text-[#8B95A9] leading-snug text-center">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="w-full max-w-sm animate-fade-in-up" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
+            <button
+              onClick={startCopilot}
+              className="w-full py-4 px-8 rounded-2xl text-base font-semibold flex items-center justify-center gap-3 group transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] text-white shadow-[0_4px_24px_rgba(0,43,92,0.3)] hover:shadow-[0_8px_32px_rgba(0,43,92,0.4)]"
+              style={{ background: "linear-gradient(135deg, #002B5C 0%, #004A8F 100%)" }}
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
+              Start a Conversation
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="transition-transform duration-200 group-hover:translate-x-0.5">
+                <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div
-        className="relative z-10 pb-6 text-center animate-fade-in-up"
-        style={{ animationDelay: "0.7s", animationFillMode: "both" }}
-      >
-        <div
-          className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] text-white/50 mb-2.5"
-          style={{ background: "rgba(255,255,255,0.06)" }}
-        >
-          🏛 SAMA Licensed &amp; Regulated
-        </div>
-        <p className="text-xs text-white/40 leading-relaxed">
-          Powered by <strong className="text-white/50">CREALOGIX</strong> LOH
-          Platform
-          <br />
-          Sharia-compliant digital lending
-        </p>
+        {/* Footer */}
+        <footer className="relative z-10 pb-6 pt-4 text-center border-t border-[#E8ECF2]">
+          <p className="text-[11px] text-[#8B95A9]">
+            SAMA Licensed & Regulated · Powered by <span className="font-semibold text-[#6B7690]">CREALOGIX</span> LOH Platform
+          </p>
+        </footer>
       </div>
     </div>
   );

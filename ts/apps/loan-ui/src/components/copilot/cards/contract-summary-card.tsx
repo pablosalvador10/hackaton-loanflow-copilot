@@ -1,6 +1,7 @@
 /** Contract summary card — shows contract details before signing. */
 
 import type { ContractSummary } from "@/types";
+import { FileText } from "lucide-react";
 
 interface Props {
   data?: Record<string, unknown>;
@@ -20,14 +21,17 @@ export function ContractSummaryCard({ data }: Props) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E2E6ED] p-5 mt-3 shadow-sm">
-      <div className="text-[13px] font-bold flex items-center gap-2 mb-3" style={{ color: "#002B5C" }}>
-        📄 {contract.contract_type} Summary
+    <div className="bg-white rounded-2xl border border-[#E8ECF2] p-5 mt-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-7 h-7 rounded-lg bg-[#F0F4FA] flex items-center justify-center">
+          <FileText className="w-3.5 h-3.5 text-[#002B5C]" />
+        </div>
+        <span className="text-xs font-semibold text-[#002B5C]">{contract.contract_type} Summary</span>
       </div>
       {rows.map(r => (
-        <div key={r.label} className="flex justify-between py-2 text-[13px] border-b border-[#EEF1F6] last:border-0">
-          <span className="text-[#6B7690]">{r.label}</span>
-          <span className={r.highlight ? "font-bold text-[15px] text-[#002B5C]" : "font-semibold text-[#1A2038]"}>
+        <div key={r.label} className="flex justify-between py-2.5 text-[13px] border-b border-[#F0F2F5] last:border-0">
+          <span className="text-[#8B95A9]">{r.label}</span>
+          <span className={r.highlight ? "font-bold text-sm text-[#002B5C]" : "font-medium text-[#1A2038]"}>
             {r.value}
           </span>
         </div>

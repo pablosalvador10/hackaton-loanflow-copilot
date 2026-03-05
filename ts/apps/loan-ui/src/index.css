@@ -181,11 +181,11 @@
 .copilot-prose ul li::before {
   content: "";
   flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  background: #00A3B4;
+  width: 5px;
+  height: 5px;
+  background: #002B5C;
   border-radius: 50%;
-  margin-top: 0.45em;
+  margin-top: 0.5em;
 }
 .copilot-prose ol {
   list-style: none;
@@ -240,12 +240,12 @@
 }
 /* Blockquote */
 .copilot-prose blockquote {
-  border-left: 3px solid #00A3B4;
+  border-left: 3px solid #002B5C;
   margin: 0.6em 0;
   padding: 0.4em 0.9em;
-  background: #F0FAFB;
+  background: #F0F4FA;
   border-radius: 0 6px 6px 0;
-  color: #3A5A70;
+  color: #3A4A6B;
   font-style: italic;
 }
 /* Table */
@@ -272,12 +272,12 @@
 }
 /* Inline link */
 .copilot-prose a {
-  color: #00A3B4;
+  color: #002B5C;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .copilot-prose a:hover {
-  color: #007A88;
+  color: #004080;
 }
 /* Horizontal rule */
 .copilot-prose hr {

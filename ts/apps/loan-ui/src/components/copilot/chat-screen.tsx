@@ -6,6 +6,7 @@ import { ProgressBar } from "./progress-bar";
 import { CopilotMessage } from "./copilot-message";
 import { TypingIndicator } from "./typing-indicator";
 import { CelebrationOverlay } from "./celebration-overlay";
+import { Send, ArrowUpRight } from "lucide-react";
 
 export function ChatScreen() {
   const { messages, currentStep, isTyping, handleSendMessage, mode, setMode } = useCopilot();
@@ -31,7 +32,6 @@ export function ChatScreen() {
     const text = input.trim();
     if (!text) return;
     setInput("");
-    // Reset height after clearing
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     handleSendMessage(text);
   }, [input, handleSendMessage]);
@@ -47,67 +47,49 @@ export function ChatScreen() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#F4F6FA" }}>
+    <div className="min-h-screen flex flex-col bg-[#F8F9FC]">
       {/* Top bar */}
-      <div
-        className="sticky top-0 z-50 flex items-center justify-between px-5 h-[60px]"
-        style={{ background: "#002B5C", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="text-[10px] font-bold tracking-[2px]" style={{ color: "#00C4D6" }}>
-            CREALOGIX
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 h-14 bg-white border-b border-[#E8ECF2] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#002B5C] flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="white" strokeWidth="1.5" />
+              <path d="M2 17l10 5 10-5" stroke="white" strokeWidth="1.5" />
+              <path d="M2 12l10 5 10-5" stroke="white" strokeWidth="1.5" />
+            </svg>
           </div>
-          <div className="w-px h-5 bg-white/15" />
-          <div className="text-[15px] font-semibold text-white flex items-center gap-2">
-            LOH Copilot
-            <span
-              className="text-[9px] font-extrabold text-white px-2 py-0.5 rounded-md tracking-wider"
-              style={{ background: "linear-gradient(135deg, #7C3AED, #A78BFA)" }}
-            >
-              AI
-            </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-[#1A2038]">LOH Copilot</span>
+            <span className="text-[9px] font-bold tracking-wider text-white px-1.5 py-0.5 rounded bg-gradient-to-r from-[#002B5C] to-[#004A8F]">AI</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Mode toggle */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setMode(mode === "mcp" ? "azure" : "mcp")}
-            className="text-[10px] font-semibold px-2.5 py-1 rounded-md transition-all duration-200 hover:opacity-80"
+            className="text-[10px] font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 border"
             style={{
-              background:
-                mode === "azure"
-                  ? "rgba(124,58,237,0.25)"
-                  : "rgba(0,212,232,0.2)",
-              color: mode === "azure" ? "#A78BFA" : "#00D4E8",
+              background: mode === "azure" ? "#F0F0FF" : "#F0FAFB",
+              borderColor: mode === "azure" ? "#D4D4FF" : "#CCE8EC",
+              color: mode === "azure" ? "#5B21B6" : "#0E7490",
             }}
           >
-            {mode === "azure" ? "AZURE AI" : "MCP DIRECT"}
+            {mode === "azure" ? "Azure AI" : "MCP"}
           </button>
-          <div
-            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-white text-sm font-bold"
-            style={{ background: "rgba(255,255,255,0.12)" }}
-          >
-            MS
+          <div className="w-8 h-8 rounded-lg bg-[#F0F2F5] text-[#5A6577] text-xs font-bold flex items-center justify-center">
+            U
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Progress — only shown in scripted MCP mode */}
       {mode === "mcp" && <ProgressBar currentStep={currentStep} />}
 
-      {/* Message list — subtle dot-grid background */}
-      <div
-        className="flex-1 overflow-y-auto px-5 py-6 scroll-smooth scrollbar-thin"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(0,43,92,0.045) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-      >
-        <div className="max-w-[620px] mx-auto space-y-4">
-          {messages.map((msg) => (
-            <CopilotMessage key={msg.id} message={msg} />
+      {/* Message list */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 scroll-smooth scrollbar-thin">
+        <div className="max-w-2xl mx-auto space-y-5">
+          {messages.map((msg, i) => (
+            <CopilotMessage key={msg.id} message={msg} isLatest={i === messages.length - 1} />
           ))}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
@@ -115,70 +97,33 @@ export function ChatScreen() {
       </div>
 
       {/* Input bar */}
-      <div
-        className="sticky bottom-0 z-40 px-5 py-3"
-        style={{
-          background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderTop: "1px solid rgba(0,43,92,0.08)",
-        }}
-      >
-        <div className="flex items-end gap-2.5 max-w-[620px] mx-auto">
+      <div className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#E8ECF2] px-4 sm:px-6 py-3">
+        <div className="flex items-end gap-2 max-w-2xl mx-auto">
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              growTextarea();
-            }}
+            onChange={(e) => { setInput(e.target.value); growTextarea(); }}
             onKeyDown={onKeyDown}
-            placeholder="Type your message… (Enter to send, Shift+Enter for new line)"
-            className="flex-1 resize-none px-[18px] py-3 border-[1.5px] rounded-[14px] text-[15px] text-[#1A2038] outline-none transition-all duration-200 leading-relaxed placeholder:text-[#BFC6D2]"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              borderColor: hasText ? "#002B5C" : "#E2E6ED",
-              boxShadow: hasText
-                ? "0 0 0 3px rgba(0,43,92,0.07)"
-                : "none",
-              minHeight: "48px",
-              maxHeight: "120px",
-            }}
+            placeholder="Type your message..."
+            className="flex-1 resize-none px-4 py-3 rounded-xl text-sm text-[#1A2038] bg-[#F4F5F7] border border-transparent outline-none transition-all duration-200 leading-relaxed placeholder:text-[#A0A8B8] focus:bg-white focus:border-[#002B5C]/20 focus:ring-2 focus:ring-[#002B5C]/5"
+            style={{ minHeight: "44px", maxHeight: "120px" }}
           />
           <button
             onClick={onSend}
             disabled={!hasText}
-            className="w-12 h-12 rounded-[14px] text-white flex items-center justify-center flex-shrink-0 transition-all duration-200"
-            style={{
-              background: hasText
-                ? "linear-gradient(135deg, #002B5C 0%, #004080 100%)"
-                : "#DDE2EA",
-              transform: hasText ? "translateY(-1px)" : "none",
-              boxShadow: hasText
-                ? "0 4px 14px rgba(0,43,92,0.28)"
-                : "none",
-              cursor: hasText ? "pointer" : "default",
-            }}
+            className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+              hasText
+                ? "bg-[#002B5C] text-white shadow-md hover:bg-[#003A75] hover:-translate-y-px"
+                : "bg-[#E8ECF2] text-[#A0A8B8] cursor-not-allowed"
+            }`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5 transition-transform duration-150"
-              style={{ transform: hasText ? "rotate(-45deg)" : "none" }}
-            >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <ArrowUpRight className="w-[18px] h-[18px]" />
           </button>
         </div>
-        <div className="text-center mt-2 text-[11px] text-[#B0B8C8] max-w-[620px] mx-auto">
-          Powered by LOH AI Copilot · Your data is encrypted &amp; secure
-        </div>
+        <p className="text-center mt-2 text-[10px] text-[#B0B8C8]">
+          Your data is encrypted & secure
+        </p>
       </div>
 
       <CelebrationOverlay />
